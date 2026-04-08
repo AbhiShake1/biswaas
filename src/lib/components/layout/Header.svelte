@@ -34,6 +34,9 @@
       <a href="/about" class="hidden rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground md:inline-flex">About</a>
 
       {#if user}
+        <span class="hidden rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground md:inline-flex">
+          {user.name}
+        </span>
         <a href="/auth/logout" class="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted">Sign Out</a>
       {:else}
         <a href="/auth/login" class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">Sign In</a>

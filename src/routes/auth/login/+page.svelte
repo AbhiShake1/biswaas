@@ -1,9 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-
-  function handleDevLogin() {
-    goto('/auth/callback?code=dev_code');
-  }
+  let { data } = $props();
 </script>
 
 <div class="flex min-h-screen items-center justify-center">
@@ -13,15 +9,18 @@
       <p class="mt-2 text-sm text-muted-foreground">Nepal's Trust & Review Platform</p>
     </div>
 
-    <button
-      onclick={handleDevLogin}
+    <a
+      href={data.signInUrl}
+      data-testid="workos-sign-in"
       class="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
     >
       Continue with WorkOS
-    </button>
+    </a>
 
-    <p class="text-center text-xs text-muted-foreground">
-      Development mode — auto-login enabled
-    </p>
+    {#if data.isDevMode}
+      <p class="text-center text-xs text-muted-foreground">
+        Demo mode is active. This will sign you in with a local WorkOS test user for verification.
+      </p>
+    {/if}
   </div>
 </div>

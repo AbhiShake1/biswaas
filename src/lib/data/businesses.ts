@@ -1,3 +1,10 @@
+export type ReplyRecord = {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+};
+
 export type ReviewRecord = {
   id: string;
   author: string;
@@ -6,6 +13,7 @@ export type ReviewRecord = {
   body: string;
   createdAt: string;
   source?: 'organic' | 'imported';
+  replies?: ReplyRecord[];
 };
 
 export type BusinessRecord = {
@@ -84,7 +92,15 @@ export const businesses: BusinessRecord[] = [
         title: 'Clear advice and fast follow-up',
         body: 'The counselors explained university options well and kept me updated throughout the application.',
         createdAt: '2026-03-29',
-        source: 'organic'
+        source: 'organic',
+        replies: [
+          {
+            id: 'aecc-1-r1',
+            author: 'AECC Global Nepal',
+            body: 'Thank you for the detailed feedback. We are glad the counseling and updates were useful.',
+            createdAt: '2026-03-30'
+          }
+        ]
       },
       {
         id: 'aecc-2',
@@ -165,7 +181,15 @@ export const businesses: BusinessRecord[] = [
         title: 'Reliable in the city core',
         body: 'Orders usually arrive on time in central Kathmandu, though weekends can be slower.',
         createdAt: '2026-04-02',
-        source: 'organic'
+        source: 'organic',
+        replies: [
+          {
+            id: 'foodmandu-1-r1',
+            author: 'Foodmandu Support',
+            body: 'Thanks for calling out the weekend delays. We are working on rider coverage during peak periods.',
+            createdAt: '2026-04-03'
+          }
+        ]
       },
       {
         id: 'foodmandu-2',
