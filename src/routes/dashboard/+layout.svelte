@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { LayoutDashboard, MessageSquare, User, Code, Mail, Users, FileSpreadsheet, ClipboardList, Megaphone, Upload, BookTemplate, Share2, Link2, Palette, BarChart3 } from '@lucide/svelte';
+  import { LayoutDashboard, MessageSquare, User, Code, Mail, Users, FileSpreadsheet, ClipboardList, Megaphone, Upload, BookTemplate, Share2, Link2, Palette, BarChart3, MapPin, AtSign } from '@lucide/svelte';
 
   let { children } = $props();
 
@@ -20,6 +20,8 @@
     { href: '/dashboard/templates', label: 'Templates', icon: BookTemplate },
     { href: '/dashboard/social', label: 'Social Media', icon: Share2 },
     { href: '/dashboard/webhooks', label: 'Webhooks', icon: Link2 },
+    { href: '/dashboard/locations', label: 'Locations', icon: MapPin },
+    { href: '/dashboard/email-widgets', label: 'Email Widgets', icon: AtSign },
   ];
 
   let currentPath = $derived($page.url.pathname);
