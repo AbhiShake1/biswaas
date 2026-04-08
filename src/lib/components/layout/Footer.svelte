@@ -30,8 +30,11 @@
         <h4 class="mb-3 text-sm font-semibold">Platform</h4>
         <ul class="space-y-2 text-sm text-muted-foreground">
           <li><a href="/about" class="hover:text-foreground">About Biswaas</a></li>
-          <li><a href="/api" class="hover:text-foreground">API Documentation</a></li>
-          <li><a href="https://github.com/AbhiShake1/biswaas" class="hover:text-foreground">GitHub</a></li>
+          <li><a href="/help" class="hover:text-foreground">Help Center</a></li>
+          <li><a href="/contact" class="hover:text-foreground">Contact Us</a></li>
+          <li><a href="/guidelines" class="hover:text-foreground">Review Guidelines</a></li>
+          <li><a href="/terms" class="hover:text-foreground">Terms of Service</a></li>
+          <li><a href="/privacy" class="hover:text-foreground">Privacy Policy</a></li>
         </ul>
       </div>
     </div>
