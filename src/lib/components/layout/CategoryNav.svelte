@@ -1,11 +1,5 @@
 <script lang="ts">
-  const categories = [
-    { name: 'Education Consultancies', slug: 'education-consultancies' },
-    { name: 'E-Commerce', slug: 'ecommerce' },
-    { name: 'Trekking & Tourism', slug: 'trekking-tourism' },
-    { name: 'ISPs & Telecom', slug: 'isp-telecom' },
-    { name: 'Hospitals & Healthcare', slug: 'hospitals-healthcare' },
-  ];
+  import { categories } from '$lib/data/businesses';
 </script>
 
 <nav class="border-b bg-muted/20">
@@ -16,12 +10,12 @@
     >
       All
     </a>
-    {#each categories as cat}
+    {#each categories as category}
       <a
-        href="/categories/{cat.slug}"
+        href="/categories/{category.slug}"
         class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
       >
-        {cat.name}
+        {category.name}
       </a>
     {/each}
   </div>

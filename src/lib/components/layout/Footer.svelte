@@ -3,7 +3,7 @@
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
       <div>
         <h3 class="mb-3 text-lg font-bold">विश्वास Biswaas</h3>
-        <p class="text-sm text-muted-foreground">Nepal's Trust & Review Platform. Helping consumers make informed decisions.</p>
+        <p class="text-sm text-muted-foreground">Business listing, area search, details, ratings, and comments for Nepal businesses.</p>
       </div>
 
       <div>
@@ -18,11 +18,11 @@
       </div>
 
       <div>
-        <h4 class="mb-3 text-sm font-semibold">For Businesses</h4>
+        <h4 class="mb-3 text-sm font-semibold">Browse</h4>
         <ul class="space-y-2 text-sm text-muted-foreground">
-          <li><a href="/dashboard" class="hover:text-foreground">Business Dashboard</a></li>
-          <li><a href="/dashboard/widgets" class="hover:text-foreground">Get Widgets</a></li>
-          <li><a href="/dashboard/reviews" class="hover:text-foreground">Manage Reviews</a></li>
+          <li><a href="/search?q=Kathmandu" class="hover:text-foreground">Kathmandu Businesses</a></li>
+          <li><a href="/search?q=Pokhara" class="hover:text-foreground">Pokhara Businesses</a></li>
+          <li><a href="/search" class="hover:text-foreground">Search by Area</a></li>
         </ul>
       </div>
 
@@ -30,9 +30,8 @@
         <h4 class="mb-3 text-sm font-semibold">Platform</h4>
         <ul class="space-y-2 text-sm text-muted-foreground">
           <li><a href="/about" class="hover:text-foreground">About Biswaas</a></li>
-          <li><a href="/help" class="hover:text-foreground">Help Center</a></li>
           <li><a href="/contact" class="hover:text-foreground">Contact Us</a></li>
-          <li><a href="/guidelines" class="hover:text-foreground">Review Guidelines</a></li>
+          <li><a href="/review-guidelines" class="hover:text-foreground">Review Guidelines</a></li>
           <li><a href="/terms" class="hover:text-foreground">Terms of Service</a></li>
           <li><a href="/privacy" class="hover:text-foreground">Privacy Policy</a></li>
         </ul>

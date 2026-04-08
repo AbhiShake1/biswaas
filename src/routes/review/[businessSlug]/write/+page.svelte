@@ -1,9 +1,11 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Star } from '@lucide/svelte';
+  import { getBusiness } from '$lib/data/businesses';
 
-  let slug = $derived($page.params.businessSlug);
-  let businessName = $derived(slug?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') ?? 'Business');
+  let slug = $derived($page.params.businessSlug ?? '');
+  let business = $derived(getBusiness(slug));
+  let businessName = $derived(business?.name ?? 'Business');
 
   let stars = $state(0);
   let hoverStars = $state(0);
@@ -11,11 +13,10 @@
   let body = $state('');
   let submitted = $state(false);
 
-  function handleSubmit(e: Event) {
-    e.preventDefault();
+  function handleSubmit(event: Event) {
+    event.preventDefault();
     if (stars === 0 || !title.trim() || !body.trim()) return;
     submitted = true;
-    // TODO: Call Convex mutation
   }
 </script>
 
@@ -42,23 +43,22 @@
     </div>
   {:else}
     <h1 class="text-2xl font-bold">Review {businessName}</h1>
-    <p class="mt-1 text-muted-foreground">Share your experience with others</p>
+    <p class="mt-1 text-muted-foreground">Share your experience with others.</p>
 
     <form onsubmit={handleSubmit} class="mt-8 space-y-6">
-      <!-- Star Rating -->
       <div>
         <span class="text-sm font-medium">Your Rating</span>
         <div class="mt-2 flex gap-1">
-          {#each [1, 2, 3, 4, 5] as n}
+          {#each [1, 2, 3, 4, 5] as value}
             <button
               type="button"
-              onclick={() => stars = n}
-              onmouseenter={() => hoverStars = n}
-              onmouseleave={() => hoverStars = 0}
+              onclick={() => (stars = value)}
+              onmouseenter={() => (hoverStars = value)}
+              onmouseleave={() => (hoverStars = 0)}
               class="p-0.5"
-              aria-label="{n} star{n !== 1 ? 's' : ''}"
+              aria-label="{value} star{value !== 1 ? 's' : ''}"
             >
-              <Star class="h-8 w-8 transition-colors {(hoverStars || stars) >= n ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}" />
+              <Star class="h-8 w-8 transition-colors {(hoverStars || stars) >= value ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}" />
             </button>
           {/each}
           {#if stars > 0}
@@ -67,7 +67,6 @@
         </div>
       </div>
 
-      <!-- Title -->
       <div>
         <label for="review-title" class="text-sm font-medium">Review Title</label>
         <input
@@ -80,9 +79,8 @@
         />
       </div>
 
-      <!-- Body -->
       <div>
-        <label for="review-body" class="text-sm font-medium">Your Review</label>
+        <label for="review-body" class="text-sm font-medium">Your Comment</label>
         <textarea
           id="review-body"
           bind:value={body}
@@ -98,7 +96,7 @@
         disabled={stars === 0 || !title.trim() || !body.trim()}
         class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
       >
-        Submit Review
+        Submit Comment
       </button>
     </form>
   {/if}

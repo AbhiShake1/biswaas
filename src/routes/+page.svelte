@@ -1,43 +1,18 @@
 <script lang="ts">
-  import { Search, Star, Shield, ArrowRight, TrendingUp, Clock, Sparkles } from '@lucide/svelte';
-
-  const categories = [
-    { name: 'Education Consultancies', slug: 'education-consultancies', count: 100, description: 'Study abroad, language schools, test prep' },
-    { name: 'E-Commerce', slug: 'ecommerce', count: 80, description: 'Online marketplaces, food delivery, shopping' },
-    { name: 'Trekking & Tourism', slug: 'trekking-tourism', count: 100, description: 'Trekking agencies, travel, hotels, adventure' },
-    { name: 'ISPs & Telecom', slug: 'isp-telecom', count: 70, description: 'Broadband, mobile operators, digital TV' },
-    { name: 'Hospitals & Healthcare', slug: 'hospitals-healthcare', count: 100, description: 'Hospitals, clinics, diagnostics, pharmacies' },
-  ];
-
-  const trendingBusinesses = [
-    { name: 'Everest Trek Adventures', slug: 'everest-trek-adventures', category: 'Trekking & Tourism', trustScore: 4.8, reviewCount: 156 },
-    { name: 'Nepal Education Gateway', slug: 'nepal-education-gateway', category: 'Education Consultancies', trustScore: 4.5, reviewCount: 89 },
-    { name: 'Grande Hospital', slug: 'grande-hospital', category: 'Hospitals & Healthcare', trustScore: 4.3, reviewCount: 112 },
-    { name: 'WorldLink Internet', slug: 'worldlink-internet', category: 'ISPs & Telecom', trustScore: 3.8, reviewCount: 234 },
-  ];
-
-  const recentReviews = [
-    { business: 'Everest Trek Adventures', author: 'Suman G.', stars: 5, snippet: 'Best trekking experience! The guides were incredibly knowledgeable.', time: '2 hours ago' },
-    { business: 'WorldLink Internet', author: 'Priya S.', stars: 3, snippet: 'Speed is decent but frequent outages in my area during monsoon.', time: '5 hours ago' },
-    { business: 'Nepal Education Gateway', author: 'Ram B.', stars: 5, snippet: 'Got my Australian visa processed smoothly. Highly recommend!', time: '1 day ago' },
-    { business: 'Daraz Nepal', author: 'Anita M.', stars: 4, snippet: 'Good product range but delivery can be slow outside Kathmandu.', time: '2 days ago' },
-  ];
-
-  const featuredCategory = {
-    name: 'Education Consultancies',
-    slug: 'education-consultancies',
-    description: 'Nepal has 1,500+ education consultancies helping students study abroad. Read reviews from real students before choosing your consultancy.',
-    stats: { businesses: 100, reviews: 1200, avgScore: 4.1 },
-  };
+  import { ArrowRight, MapPin, Search, Star } from '@lucide/svelte';
+  import { businesses, categories } from '$lib/data/businesses';
 
   function starArray(count: number) {
     return Array.from({ length: 5 }, (_, i) => i < count);
   }
+
+  const featuredBusinesses = businesses.slice(0, 6);
+  const areas = ['Kathmandu', 'Lalitpur', 'Pokhara', 'Kaski'];
 </script>
 
 <svelte:head>
   <title>Biswaas — Nepal's Trust & Review Platform</title>
-  <meta name="description" content="Read and write reviews for businesses in Nepal. Find trusted education consultancies, e-commerce platforms, trekking agencies, ISPs, and hospitals." />
+  <meta name="description" content="Search Nepal businesses by district or municipality, compare ratings, and read real customer comments." />
 </svelte:head>
 
 <section class="border-b bg-gradient-to-b from-primary/5 to-background py-16 md:py-24">
@@ -46,7 +21,7 @@
       विश्वास <span class="text-primary">Biswaas</span>
     </h1>
     <p class="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-      Nepal's trusted review platform. Find honest reviews for businesses across Nepal — from education consultancies to hospitals.
+      Search by district, compare ratings, and read customer comments before choosing a business.
     </p>
 
     <form action="/search" method="GET" class="mx-auto mt-8 max-w-lg">
@@ -55,15 +30,18 @@
         <input
           type="search"
           name="q"
-          placeholder="Search for a business, category, or service..."
+          placeholder="Search by business name, district, or municipality"
           class="w-full rounded-full border bg-background py-3 pl-12 pr-4 text-sm shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
     </form>
 
-    <div class="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
-      <span class="flex items-center gap-1"><Star class="h-4 w-4 text-yellow-500" /> 450+ Businesses</span>
-      <span class="flex items-center gap-1"><Shield class="h-4 w-4 text-green-500" /> Verified Reviews</span>
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm">
+      {#each areas as area}
+        <a href="/search?q={area}" class="rounded-full border px-3 py-1.5 text-muted-foreground hover:border-primary/50 hover:text-foreground">
+          {area}
+        </a>
+      {/each}
     </div>
   </div>
 </section>
@@ -73,106 +51,74 @@
     <h2 class="mb-8 text-2xl font-bold">Browse Categories</h2>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {#each categories as cat}
+      {#each categories as category}
         <a
-          href="/categories/{cat.slug}"
+          href="/categories/{category.slug}"
           class="group rounded-lg border p-6 transition-colors hover:border-primary/50 hover:bg-muted/50"
         >
           <div class="flex items-start justify-between">
             <div>
-              <h3 class="font-semibold group-hover:text-primary">{cat.name}</h3>
-              <p class="mt-1 text-sm text-muted-foreground">{cat.description}</p>
+              <h3 class="font-semibold group-hover:text-primary">{category.name}</h3>
+              <p class="mt-1 text-sm text-muted-foreground">{category.description}</p>
             </div>
             <ArrowRight class="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
           </div>
-          <p class="mt-3 text-xs text-muted-foreground">{cat.count} businesses</p>
+          <p class="mt-3 text-xs text-muted-foreground">{businesses.filter((business) => business.categorySlug === category.slug).length} businesses</p>
         </a>
       {/each}
     </div>
   </div>
 </section>
 
-<!-- Trending Businesses -->
 <section class="border-t py-12">
   <div class="container mx-auto px-4">
-    <div class="flex items-center gap-2 mb-8">
-      <TrendingUp class="h-5 w-5 text-primary" />
-      <h2 class="text-2xl font-bold">Trending Businesses</h2>
+    <div class="mb-8 flex items-center gap-2">
+      <MapPin class="h-5 w-5 text-primary" />
+      <h2 class="text-2xl font-bold">Businesses With Active Reviews</h2>
     </div>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {#each trendingBusinesses as biz}
-        <a href="/search?q={biz.slug}" class="group rounded-lg border p-5 transition-colors hover:border-primary/50 hover:bg-muted/50">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {#each featuredBusinesses as business}
+        <a href="/review/{business.slug}" class="group rounded-lg border p-5 transition-colors hover:border-primary/50 hover:bg-muted/50">
           <div class="flex items-center gap-2">
-            <span class="text-2xl font-bold">{biz.trustScore}</span>
+            <span class="text-2xl font-bold">{business.trustScore}</span>
             <div class="flex gap-0.5">
-              {#each starArray(Math.round(biz.trustScore)) as filled}
+              {#each starArray(business.starRating) as filled}
                 <Star class="h-3 w-3 {filled ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}" />
               {/each}
             </div>
           </div>
-          <h3 class="mt-2 font-semibold group-hover:text-primary">{biz.name}</h3>
-          <p class="mt-1 text-xs text-muted-foreground">{biz.category} &middot; {biz.reviewCount} reviews</p>
+          <h3 class="mt-2 font-semibold group-hover:text-primary">{business.name}</h3>
+          <p class="mt-1 text-sm text-muted-foreground">{business.categoryName}</p>
+          <p class="mt-2 text-xs text-muted-foreground">{business.municipality}, {business.district}</p>
+          <p class="mt-2 text-xs text-muted-foreground">{business.totalReviews} reviews</p>
         </a>
       {/each}
     </div>
   </div>
 </section>
 
-<!-- Recently Reviewed -->
 <section class="border-t bg-muted/30 py-12">
   <div class="container mx-auto px-4">
-    <div class="flex items-center gap-2 mb-8">
-      <Clock class="h-5 w-5 text-primary" />
-      <h2 class="text-2xl font-bold">Recently Reviewed</h2>
-    </div>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {#each recentReviews as review}
-        <div class="rounded-lg border bg-background p-5">
-          <div class="flex items-center gap-1">
-            {#each starArray(review.stars) as filled}
-              <Star class="h-3 w-3 {filled ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}" />
-            {/each}
-          </div>
-          <p class="mt-2 text-sm text-muted-foreground line-clamp-2">{review.snippet}</p>
-          <div class="mt-3 flex items-center justify-between text-xs">
-            <span class="font-medium">{review.author}</span>
-            <span class="text-muted-foreground">{review.time}</span>
-          </div>
-          <p class="mt-1 text-xs text-primary">{review.business}</p>
+    <div class="rounded-xl border bg-background p-8">
+      <h2 class="text-2xl font-bold">What stays in scope</h2>
+      <div class="mt-4 grid gap-4 text-left sm:grid-cols-2">
+        <div class="rounded-lg border p-4">
+          <h3 class="font-semibold">Business listing</h3>
+          <p class="mt-2 text-sm text-muted-foreground">Category pages and area-based search for discovering businesses quickly.</p>
         </div>
-      {/each}
-    </div>
-  </div>
-</section>
-
-<!-- Featured Category Spotlight -->
-<section class="border-t py-12">
-  <div class="container mx-auto px-4">
-    <div class="flex items-center gap-2 mb-6">
-      <Sparkles class="h-5 w-5 text-primary" />
-      <h2 class="text-2xl font-bold">Featured Category</h2>
-    </div>
-    <div class="rounded-xl border bg-gradient-to-r from-primary/5 to-background p-8">
-      <h3 class="text-xl font-bold">{featuredCategory.name}</h3>
-      <p class="mt-2 max-w-2xl text-muted-foreground">{featuredCategory.description}</p>
-      <div class="mt-4 flex gap-6 text-sm">
-        <span><strong>{featuredCategory.stats.businesses}</strong> businesses</span>
-        <span><strong>{featuredCategory.stats.reviews.toLocaleString()}</strong> reviews</span>
-        <span><strong>{featuredCategory.stats.avgScore}</strong> avg. score</span>
+        <div class="rounded-lg border p-4">
+          <h3 class="font-semibold">Business details</h3>
+          <p class="mt-2 text-sm text-muted-foreground">Business description, location, contact details, and rating summary.</p>
+        </div>
+        <div class="rounded-lg border p-4">
+          <h3 class="font-semibold">Ratings</h3>
+          <p class="mt-2 text-sm text-muted-foreground">Trust score, star rating, review totals, and rating distribution.</p>
+        </div>
+        <div class="rounded-lg border p-4">
+          <h3 class="font-semibold">Comments</h3>
+          <p class="mt-2 text-sm text-muted-foreground">Readable customer reviews plus a direct write-review path.</p>
+        </div>
       </div>
-      <a href="/categories/{featuredCategory.slug}" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-        Explore {featuredCategory.name} <ArrowRight class="h-4 w-4" />
-      </a>
     </div>
-  </div>
-</section>
-
-<section class="border-t bg-muted/30 py-12">
-  <div class="container mx-auto px-4 text-center">
-    <h2 class="text-2xl font-bold">Own a Business in Nepal?</h2>
-    <p class="mt-2 text-muted-foreground">Claim your profile, respond to reviews, and build trust with customers.</p>
-    <a href="/auth/login" class="mt-4 inline-block rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-      Claim Your Business
-    </a>
   </div>
 </section>

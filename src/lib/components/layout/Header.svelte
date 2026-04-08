@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { Menu, Search, Globe } from '@lucide/svelte';
-  import ThemeToggle from './ThemeToggle.svelte';
+  import { Menu, Search } from '@lucide/svelte';
 
   let { user = null, onToggleMobile = () => {} }: { user: any; onToggleMobile: () => void } = $props();
   let searchQuery = $state('');
@@ -23,7 +22,7 @@
         <input
           type="search"
           name="q"
-          placeholder="Search businesses..."
+          placeholder="Search by business or area"
           bind:value={searchQuery}
           class="w-full rounded-md border bg-muted/50 py-1.5 pl-9 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
@@ -31,13 +30,10 @@
     </div>
 
     <nav class="flex items-center space-x-2">
-      <button class="rounded-md p-2 text-muted-foreground hover:bg-muted" aria-label="Switch language">
-        <Globe class="h-4 w-4" />
-      </button>
-      <ThemeToggle />
+      <a href="/categories" class="hidden rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground md:inline-flex">Categories</a>
+      <a href="/about" class="hidden rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground md:inline-flex">About</a>
 
       {#if user}
-        <a href="/dashboard" class="rounded-md px-3 py-1.5 text-sm hover:bg-muted">Dashboard</a>
         <a href="/auth/logout" class="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted">Sign Out</a>
       {:else}
         <a href="/auth/login" class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">Sign In</a>
