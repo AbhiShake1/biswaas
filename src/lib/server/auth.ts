@@ -1,10 +1,9 @@
-import { env } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
-// WorkOS configuration
-const WORKOS_CLIENT_ID = env.WORKOS_CLIENT_ID || 'dev_client_id';
-const WORKOS_API_KEY = env.WORKOS_API_KEY || 'dev_api_key';
-const WORKOS_REDIRECT_URI = env.WORKOS_REDIRECT_URI || 'http://localhost:5173/auth/callback';
-const COOKIE_PASSWORD = env.WORKOS_COOKIE_PASSWORD || 'a]very$ecure32charpassword!!!!!';
+// WorkOS configuration (lazy access via dynamic env)
+function getEnv(key: string, fallback: string): string {
+  return env[key] ?? fallback;
+}
 
 export interface AuthUser {
   id: string;
@@ -21,14 +20,17 @@ const DEV_USER: AuthUser = {
 };
 
 export function isDevMode(): boolean {
-  return !env.WORKOS_API_KEY || env.WORKOS_API_KEY === 'dev_api_key';
+  const apiKey = getEnv('WORKOS_API_KEY', 'dev_api_key');
+  return !apiKey || apiKey === 'dev_api_key';
 }
 
 export function getSignInUrl(): string {
   if (isDevMode()) {
     return '/auth/callback?code=dev_code';
   }
-  return `https://api.workos.com/sso/authorize?client_id=${WORKOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(WORKOS_REDIRECT_URI)}&response_type=code`;
+  const clientId = getEnv('WORKOS_CLIENT_ID', 'dev_client_id');
+  const redirectUri = getEnv('WORKOS_REDIRECT_URI', 'http://localhost:5173/auth/callback');
+  return `https://api.workos.com/sso/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
 }
 
 export function getSignUpUrl(): string {

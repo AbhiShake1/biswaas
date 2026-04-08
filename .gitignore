@@ -21,3 +21,9 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Evidence (screenshots for PRs - uploaded separately)
+/evidence
+
+# Claude
+.claude/
