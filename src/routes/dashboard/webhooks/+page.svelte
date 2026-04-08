@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Webhook, Plus, Trash2, TestTube, CheckCircle, XCircle, Clock } from '@lucide/svelte';
+  import { Link2, Plus, Trash2, Play, CheckCircle, XCircle, Clock } from '@lucide/svelte';
 
   interface WebhookEntry {
     id: string;
@@ -167,7 +167,7 @@
       <div class="rounded-lg border p-4">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-2">
-            <Webhook class="h-4 w-4 text-muted-foreground" />
+            <Link2 class="h-4 w-4 text-muted-foreground" />
             <code class="text-sm font-mono">{webhook.url}</code>
             {#if webhook.active}
               <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">Active</span>
@@ -175,7 +175,7 @@
           </div>
           <div class="flex gap-1">
             <button onclick={() => testWebhook(webhook.id)} class="rounded-md border p-1.5 hover:bg-muted" title="Test webhook">
-              <TestTube class="h-4 w-4" />
+              <Play class="h-4 w-4" />
             </button>
             <button onclick={() => removeWebhook(webhook.id)} class="rounded-md border p-1.5 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20" title="Delete webhook">
               <Trash2 class="h-4 w-4" />
