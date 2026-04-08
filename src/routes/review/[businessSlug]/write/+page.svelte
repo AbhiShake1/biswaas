@@ -47,7 +47,7 @@
     <form onsubmit={handleSubmit} class="mt-8 space-y-6">
       <!-- Star Rating -->
       <div>
-        <label class="text-sm font-medium">Your Rating</label>
+        <span class="text-sm font-medium">Your Rating</span>
         <div class="mt-2 flex gap-1">
           {#each [1, 2, 3, 4, 5] as n}
             <button

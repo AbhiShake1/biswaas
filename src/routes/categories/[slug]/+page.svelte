@@ -62,7 +62,7 @@
   };
 
   let slug = $derived($page.params.slug);
-  let category = $derived(categoryMap[slug]);
+  let category = $derived(slug ? categoryMap[slug] : undefined);
 </script>
 
 <svelte:head>
