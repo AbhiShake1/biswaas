@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Menu, Search, Globe } from '@lucide/svelte';
+  import ThemeToggle from './ThemeToggle.svelte';
 
   let { user = null, onToggleMobile = () => {} }: { user: any; onToggleMobile: () => void } = $props();
   let searchQuery = $state('');
@@ -33,6 +34,7 @@
       <button class="rounded-md p-2 text-muted-foreground hover:bg-muted" aria-label="Switch language">
         <Globe class="h-4 w-4" />
       </button>
+      <ThemeToggle />
 
       {#if user}
         <a href="/dashboard" class="rounded-md px-3 py-1.5 text-sm hover:bg-muted">Dashboard</a>

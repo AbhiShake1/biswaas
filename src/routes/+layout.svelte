@@ -4,6 +4,7 @@
   import Footer from '$lib/components/layout/Footer.svelte';
   import MobileNav from '$lib/components/layout/MobileNav.svelte';
   import CategoryNav from '$lib/components/layout/CategoryNav.svelte';
+  import CookieConsent from '$lib/components/CookieConsent.svelte';
 
   let { children, data } = $props();
   let mobileOpen = $state(false);
@@ -26,4 +27,5 @@
   </main>
 
   <Footer />
+  <CookieConsent />
 </div>
