@@ -15,9 +15,12 @@
   <link rel="icon" href="/favicon.svg" />
 </svelte:head>
 
-<div class="flex min-h-screen flex-col">
+<div class="app-shell flex min-h-screen flex-col">
   {#if !isEmbedRoute}
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-lg"
+    >
       Skip to content
     </a>
     <Header user={data.user} onToggleMobile={() => (mobileOpen = !mobileOpen)} />
@@ -25,7 +28,7 @@
     <MobileNav open={mobileOpen} onClose={() => (mobileOpen = false)} />
   {/if}
 
-  <main id="main-content" class="flex-1">
+  <main id="main-content" class="relative flex-1">
     {@render children()}
   </main>
 
