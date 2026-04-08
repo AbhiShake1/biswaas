@@ -130,6 +130,13 @@
             </div>
           {/each}
         </div>
+
+        <div class="mt-6 border-t pt-4">
+          <p class="text-xs text-muted-foreground">Need to show this rating elsewhere?</p>
+          <a href="/review/{business.slug}/embed" class="mt-2 block rounded-md border px-3 py-2 text-center text-sm font-medium hover:bg-muted">
+            Get Embeddable Widgets
+          </a>
+        </div>
       </div>
     </div>
   </div>

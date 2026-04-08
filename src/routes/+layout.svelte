@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/stores';
   import '../app.css';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
@@ -7,6 +8,7 @@
 
   let { children, data } = $props();
   let mobileOpen = $state(false);
+  let isEmbedRoute = $derived($page.url.pathname.startsWith('/embed/'));
 </script>
 
 <svelte:head>
@@ -14,16 +16,20 @@
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
-  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
-    Skip to content
-  </a>
-  <Header user={data.user} onToggleMobile={() => (mobileOpen = !mobileOpen)} />
-  <CategoryNav />
-  <MobileNav open={mobileOpen} onClose={() => (mobileOpen = false)} />
+  {#if !isEmbedRoute}
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
+      Skip to content
+    </a>
+    <Header user={data.user} onToggleMobile={() => (mobileOpen = !mobileOpen)} />
+    <CategoryNav />
+    <MobileNav open={mobileOpen} onClose={() => (mobileOpen = false)} />
+  {/if}
 
   <main id="main-content" class="flex-1">
     {@render children()}
   </main>
 
-  <Footer />
+  {#if !isEmbedRoute}
+    <Footer />
+  {/if}
 </div>
