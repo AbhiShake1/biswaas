@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
+  import { onMount } from 'svelte';
   import { Search, BookOpen, Pencil, Award } from '@lucide/svelte';
 
   let visible = $state(false);
@@ -12,12 +12,14 @@
     { icon: Award, title: 'Earn badges', description: 'Get recognized for your contributions. Earn bronze, silver, and gold badges as you review more businesses.' },
   ];
 
-  if (browser) {
+  const currentStep = $derived(steps[step]);
+
+  onMount(() => {
     const seen = localStorage.getItem('biswaas-onboarding-done');
     if (!seen) {
       visible = true;
     }
-  }
+  });
 
   function next() {
     if (step < steps.length - 1) {
@@ -32,9 +34,7 @@
   }
 
   function finish() {
-    if (browser) {
-      localStorage.setItem('biswaas-onboarding-done', 'true');
-    }
+    localStorage.setItem('biswaas-onboarding-done', 'true');
     visible = false;
   }
 </script>
@@ -50,7 +50,6 @@
       </div>
 
       <!-- Step content -->
-      {@const currentStep = steps[step]}
       <div class="mt-6 flex flex-col items-center text-center">
         <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <currentStep.icon class="h-8 w-8 text-primary" />
