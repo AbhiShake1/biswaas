@@ -1,46 +1,66 @@
 <script lang="ts">
-  import { Menu, Search, Globe } from '@lucide/svelte';
-  import ThemeToggle from './ThemeToggle.svelte';
+  import { Menu, Search } from '@lucide/svelte';
 
   let { user = null, onToggleMobile = () => {} }: { user: any; onToggleMobile: () => void } = $props();
   let searchQuery = $state('');
 </script>
 
-<header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-  <div class="container mx-auto flex h-14 items-center px-4">
-    <button onclick={onToggleMobile} class="mr-2 md:hidden" aria-label="Toggle menu">
+<header class="sticky top-0 z-50 w-full border-b border-white/8 bg-[var(--theme-ink)] text-white shadow-[0_10px_30px_-20px_rgba(0,0,0,0.85)]">
+  <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+
+  <div class="section-wrap flex min-h-18 items-center gap-3 py-3">
+    <button
+      onclick={onToggleMobile}
+      class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-white/6 text-white md:hidden"
+      aria-label="Toggle menu"
+    >
       <Menu class="h-5 w-5" />
     </button>
 
-    <a href="/" class="mr-6 flex items-center space-x-2">
-      <span class="text-xl font-bold">विश्वास</span>
-      <span class="hidden text-sm text-muted-foreground sm:inline">Biswaas</span>
+    <a href="/" class="mr-2 flex min-w-0 items-center gap-3">
+      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--theme-green)] text-base font-semibold text-[var(--theme-ink)] shadow-[0_18px_40px_-28px_rgba(23,214,148,0.55)]">
+        बि
+      </div>
+      <div class="min-w-0">
+        <div class="text-xl font-extrabold leading-none tracking-[-0.03em] text-white">विश्वास</div>
+        <div class="text-xs uppercase tracking-[0.28em] text-white/55">Biswaas</div>
+      </div>
     </a>
 
-    <div class="flex-1 md:mx-8">
-      <form action="/search" method="GET" class="relative max-w-md">
-        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div class="hidden flex-1 md:block md:px-4">
+      <form action="/search" method="GET" class="relative mx-auto flex max-w-xl items-center rounded-full bg-white px-4 py-2 shadow-[0_14px_34px_-22px_rgba(0,0,0,0.45)]">
+        <Search class="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--theme-blue)]" />
         <input
           type="search"
           name="q"
-          placeholder="Search businesses..."
+          placeholder="Search by business or area"
           bind:value={searchQuery}
-          class="w-full rounded-md border bg-muted/50 py-1.5 pl-9 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          class="h-10 w-full rounded-full bg-transparent py-2 pl-10 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
         />
       </form>
     </div>
 
-    <nav class="flex items-center space-x-2">
-      <button class="rounded-md p-2 text-muted-foreground hover:bg-muted" aria-label="Switch language">
-        <Globe class="h-4 w-4" />
-      </button>
-      <ThemeToggle />
+    <nav class="ml-auto flex items-center gap-2">
+      <a
+        href="/categories"
+        class="hidden rounded-full px-4 py-2 text-sm font-medium text-white/72 hover:bg-white/8 hover:text-white md:inline-flex"
+      >
+        Categories
+      </a>
+      <a href="/about" class="hidden rounded-full px-4 py-2 text-sm font-medium text-white/72 hover:bg-white/8 hover:text-white md:inline-flex">About</a>
 
       {#if user}
-        <a href="/dashboard" class="rounded-md px-3 py-1.5 text-sm hover:bg-muted">Dashboard</a>
-        <a href="/auth/logout" class="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted">Sign Out</a>
+        <span class="hidden rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-medium text-white md:inline-flex">
+          {user.name}
+        </span>
+        <a href="/auth/logout" class="rounded-full px-4 py-2 text-sm font-medium text-white/72 hover:bg-white/8 hover:text-white">Sign Out</a>
       {:else}
-        <a href="/auth/login" class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">Sign In</a>
+        <a
+          href="/auth/login"
+          class="rounded-full bg-[var(--theme-blue)] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_36px_-22px_rgba(75,97,209,0.72)] hover:-translate-y-0.5"
+        >
+          Sign In
+        </a>
       {/if}
     </nav>
   </div>

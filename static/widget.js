@@ -1,34 +1,33 @@
-(function() {
-  var BISWAAS_URL = 'https://biswaas.pages.dev';
+(function () {
+  const nodes = document.querySelectorAll('.biswaas-widget[data-business-slug][data-widget]');
+  if (!nodes.length) return;
 
-  function init() {
-    var widgets = document.querySelectorAll('.biswaas-widget');
-    for (var i = 0; i < widgets.length; i++) {
-      var el = widgets[i];
-      if (el.dataset.loaded) continue;
-      var type = el.dataset.type || 'badge';
-      var businessId = el.dataset.businessId || '';
-      var theme = el.dataset.theme || 'light';
-      var iframe = document.createElement('iframe');
-      iframe.src = BISWAAS_URL + '/embed/' + type + '/' + businessId + '?theme=' + theme;
-      iframe.style.border = 'none';
-      iframe.style.width = el.dataset.width || '100%';
-      iframe.style.height = el.dataset.height || (type === 'carousel' ? '320px' : type === 'stars' ? '80px' : type === 'mini' ? '40px' : '60px');
-      iframe.setAttribute('loading', 'lazy');
-      iframe.setAttribute('title', 'Biswaas Trust Score');
-      el.appendChild(iframe);
-      el.dataset.loaded = 'true';
+  const baseUrl = window.BISWAAS_WIDGET_BASE_URL || 'https://biswaas.com';
+
+  nodes.forEach((node) => {
+    const businessSlug = node.getAttribute('data-business-slug');
+    const widget = node.getAttribute('data-widget');
+
+    if (!businessSlug || !widget) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = `${baseUrl}/embed/${widget}/${businessSlug}`;
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.style.border = '0';
+    iframe.style.background = 'transparent';
+
+    if (widget === 'badge') {
+      iframe.width = '220';
+      iframe.height = '72';
+    } else if (widget === 'stars') {
+      iframe.width = '260';
+      iframe.height = '88';
+    } else {
+      iframe.width = '100%';
+      iframe.height = '320';
     }
-  }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  // Re-init for SPA
-  if (window.MutationObserver) {
-    new MutationObserver(init).observe(document.body, { childList: true, subtree: true });
-  }
+    node.replaceChildren(iframe);
+  });
 })();

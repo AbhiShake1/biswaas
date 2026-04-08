@@ -44,6 +44,8 @@ export const getBySlug = query({
       }))
     );
 
+    businessesWithLogos.sort((a, b) => b.trustScore - a.trustScore);
+
     return { ...category, subcategories, businesses: businessesWithLogos };
   },
 });

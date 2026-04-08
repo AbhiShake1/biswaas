@@ -1,27 +1,23 @@
 <script lang="ts">
-  const categories = [
-    { name: 'Education Consultancies', slug: 'education-consultancies' },
-    { name: 'E-Commerce', slug: 'ecommerce' },
-    { name: 'Trekking & Tourism', slug: 'trekking-tourism' },
-    { name: 'ISPs & Telecom', slug: 'isp-telecom' },
-    { name: 'Hospitals & Healthcare', slug: 'hospitals-healthcare' },
-  ];
+  let { categories = [] }: {
+    categories: Array<{ slug: string; name: string }>;
+  } = $props();
 </script>
 
-<nav class="border-b bg-muted/20">
-  <div class="container mx-auto flex items-center gap-1 overflow-x-auto px-4 py-2">
+<nav class="border-b border-border/60 bg-background/88 backdrop-blur-xl">
+  <div class="section-wrap flex items-center gap-2 overflow-x-auto py-3">
     <a
       href="/categories"
-      class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+      class="whitespace-nowrap rounded-full bg-[var(--theme-green)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--theme-ink)] shadow-[0_12px_24px_-18px_rgba(23,214,148,0.72)]"
     >
       All
     </a>
-    {#each categories as cat}
+    {#each categories as category}
       <a
-        href="/categories/{cat.slug}"
-        class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        href="/categories/{category.slug}"
+        class="whitespace-nowrap rounded-full border border-border/75 bg-white px-4 py-2 text-xs font-medium text-muted-foreground shadow-[0_10px_22px_-20px_rgba(23,23,23,0.35)] hover:border-[var(--theme-blue)]/40 hover:text-foreground"
       >
-        {cat.name}
+        {category.name}
       </a>
     {/each}
   </div>
