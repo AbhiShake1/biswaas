@@ -1,10 +1,12 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { Star, MapPin, Globe, Phone, Shield, ThumbsUp } from '@lucide/svelte';
+  import { Star, MapPin, Globe, Phone, Shield } from '@lucide/svelte';
   import LocationMap from '$lib/components/business/LocationMap.svelte';
   import BookmarkButton from '$lib/components/business/BookmarkButton.svelte';
   import AttributeRating from '$lib/components/review/AttributeRating.svelte';
   import ReviewHighlights from '$lib/components/review/ReviewHighlights.svelte';
+  import HelpfulVotes from '$lib/components/review/HelpfulVotes.svelte';
+  import ReportReview from '$lib/components/review/ReportReview.svelte';
 
   let slug = $derived($page.params.businessSlug);
 
@@ -110,7 +112,7 @@
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-xl font-bold">Reviews ({mockBusiness.totalReviews})</h2>
         <div class="flex items-center gap-2">
-          <BookmarkButton businessSlug={slug} />
+          <BookmarkButton businessSlug={slug ?? ''} />
           <a href="/review/{slug}/write" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             Write a Review
           </a>
@@ -152,9 +154,8 @@
             {/if}
 
             <div class="mt-3 flex items-center gap-3">
-              <button class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                <ThumbsUp class="h-3 w-3" /> Helpful ({review.helpfulCount})
-              </button>
+              <HelpfulVotes reviewId={review.id} />
+              <ReportReview reviewId={review.id} />
             </div>
           </div>
         {/each}

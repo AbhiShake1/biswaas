@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { LayoutDashboard, MessageSquare, User, Code, Mail, Users, FileSpreadsheet, ClipboardList, Megaphone, Upload, BookTemplate, Share2, Link2 } from '@lucide/svelte';
+  import { LayoutDashboard, MessageSquare, User, Code, Mail, Users, FileSpreadsheet, ClipboardList, Megaphone, Upload, BookTemplate, Share2, Link2, Palette } from '@lucide/svelte';
 
   let { children } = $props();
 
@@ -8,6 +8,7 @@
     { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
     { href: '/dashboard/reviews', label: 'Reviews', icon: MessageSquare },
     { href: '/dashboard/profile', label: 'Profile', icon: User },
+    { href: '/dashboard/customize', label: 'Customize', icon: Palette },
     { href: '/dashboard/widgets', label: 'Widgets', icon: Code },
     { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
     { href: '/dashboard/team', label: 'Team', icon: Users },
