@@ -13,11 +13,12 @@
 </script>
 
 {#if open}
-  <div class="fixed inset-0 z-50 bg-black/50" role="presentation" onclick={onClose}>
-    <nav
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 z-50 bg-black/50" role="presentation" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()}>
+    <div
       class="fixed left-0 top-0 h-full w-72 bg-background p-6 shadow-lg"
-      role="navigation"
       onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
     >
       <div class="mb-6 flex items-center justify-between">
         <span class="text-lg font-bold">विश्वास</span>
@@ -45,6 +46,6 @@
           <a href="/auth/login" class="block rounded-md px-3 py-2 text-sm hover:bg-muted" onclick={onClose}>Sign In</a>
         </div>
       </div>
-    </nav>
+    </div>
   </div>
 {/if}
