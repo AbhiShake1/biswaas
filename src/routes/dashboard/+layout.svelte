@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { LayoutDashboard, MessageSquare, User, Code, Mail } from '@lucide/svelte';
+  import { LayoutDashboard, MessageSquare, User, Code, Mail, Share2, Webhook } from '@lucide/svelte';
 
   let { children } = $props();
 
@@ -10,6 +10,8 @@
     { href: '/dashboard/profile', label: 'Profile', icon: User },
     { href: '/dashboard/widgets', label: 'Widgets', icon: Code },
     { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
+    { href: '/dashboard/social', label: 'Social Media', icon: Share2 },
+    { href: '/dashboard/webhooks', label: 'Webhooks', icon: Webhook },
   ];
 
   let currentPath = $derived($page.url.pathname);

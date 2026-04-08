@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Biswaas</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: #1a1a2e; color: #ffffff; padding: 32px 24px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    .header p { margin: 8px 0 0; font-size: 14px; opacity: 0.8; }
+    .body { padding: 32px 24px; }
+    .body h2 { margin: 0 0 16px; font-size: 20px; color: #1a1a2e; }
+    .body p { margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #555555; }
+    .steps { margin: 24px 0; }
+    .step { display: flex; gap: 12px; margin-bottom: 16px; }
+    .step-num { flex-shrink: 0; width: 32px; height: 32px; background: #4f46e5; color: #ffffff; border-radius: 50%; text-align: center; line-height: 32px; font-size: 14px; font-weight: 600; }
+    .step-text { font-size: 14px; color: #555; line-height: 1.5; padding-top: 4px; }
+    .step-text strong { color: #1a1a2e; }
+    .cta { display: inline-block; background: #4f46e5; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; }
+    .footer { background: #f5f5f5; padding: 24px; text-align: center; font-size: 12px; color: #999999; }
+    .footer a { color: #4f46e5; text-decoration: none; }
+    @media (max-width: 640px) { .body { padding: 24px 16px; } .header { padding: 24px 16px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Biswaas</h1>
+      <p>Nepal's Trust & Review Platform</p>
+    </div>
+    <div class="body">
+      <h2>Welcome to Biswaas!</h2>
+      <p>Hi {{user_name}},</p>
+      <p>Thank you for joining Biswaas. You're now part of Nepal's growing community of honest reviewers helping others make better decisions.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>Find a business</strong> — Search for businesses you've used in Nepal.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Write a review</strong> — Share your honest experience to help others.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Build trust</strong> — Your reviews make Nepal's business ecosystem more transparent.</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="https://biswaas.com/search" class="cta">Explore Businesses</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>You received this because you signed up on <a href="https://biswaas.com">Biswaas</a>.</p>
+      <p style="margin-top: 8px;"><a href="{{unsubscribe_url}}">Unsubscribe</a></p>
+    </div>
+  </div>
+</body>
+</html>
