@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { categories } from '$lib/data/businesses';
+  let { categories = [] }: {
+    categories: Array<{ slug: string; name: string }>;
+  } = $props();
 </script>
 
 <nav class="border-b border-border/60 bg-background/88 backdrop-blur-xl">

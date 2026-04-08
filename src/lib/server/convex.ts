@@ -1,13 +1,5 @@
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import {
-	businesses as staticBusinesses,
-	categories as staticCategories,
-	getBusiness as getStaticBusiness,
-	getBusinessesByCategory as getStaticBusinessesByCategory,
-	getCategory as getStaticCategory,
-	searchBusinesses as searchStaticBusinesses
-} from '$lib/data/businesses';
 import type {
 	BusinessRecord,
 	BusinessSummary,
@@ -66,11 +58,7 @@ type RawReview = {
 };
 
 function convexBaseUrl() {
-	return env.CONVEX_URL?.trim().replace(/\/$/, '') || null;
-}
-
-function requireConvexBaseUrl() {
-	const baseUrl = convexBaseUrl();
+	const baseUrl = env.CONVEX_URL?.trim().replace(/\/$/, '') || null;
 	if (!baseUrl) {
 		throw error(500, 'CONVEX_URL is not configured for the app server.');
 	}
@@ -79,7 +67,7 @@ function requireConvexBaseUrl() {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-	const response = await fetch(`${requireConvexBaseUrl()}${path}`, {
+	const response = await fetch(`${convexBaseUrl()}${path}`, {
 		...init,
 		headers: {
 			'Content-Type': 'application/json',
@@ -107,45 +95,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 	}
 
 	return payload as T;
-}
-
-function fallbackCategories(): CategoryRecord[] {
-	return staticCategories.map((category, index) => ({
-		id: `static-category-${index + 1}`,
-		name: category.name,
-		slug: category.slug,
-		description: category.description,
-		businessCount: staticBusinesses.filter((business) => business.categorySlug === category.slug).length
-	}));
-}
-
-function fallbackBusinessSummary(business: (typeof staticBusinesses)[number], index?: number): BusinessSummary {
-	const summaryIndex = index ?? staticBusinesses.findIndex((candidate) => candidate.slug === business.slug);
-
-	return {
-		id: `static-business-${summaryIndex + 1}`,
-		name: business.name,
-		slug: business.slug,
-		categorySlug: business.categorySlug,
-		categoryName: business.categoryName,
-		description: business.description,
-		district: business.district,
-		municipality: business.municipality,
-		address: business.address,
-		phone: business.phone,
-		websiteUrl: business.websiteUrl,
-		trustScore: business.trustScore,
-		starRating: business.starRating,
-		totalReviews: business.totalReviews,
-		ratingDistribution: business.ratingDistribution
-	};
-}
-
-function fallbackBusinessRecord(business: (typeof staticBusinesses)[number]): BusinessRecord {
-	return {
-		...fallbackBusinessSummary(business),
-		reviews: business.reviews
-	};
 }
 
 function normalizeCategory(category: RawCategory): CategoryRecord {
@@ -206,25 +155,11 @@ function normalizeReview(review: RawReview): ReviewRecord {
 }
 
 export async function getCategories() {
-	if (!convexBaseUrl()) {
-		return fallbackCategories();
-	}
-
 	const response = await request<{ categories: RawCategory[] }>('/api/v1/categories');
 	return response.categories.map(normalizeCategory);
 }
 
 export async function getCategory(slug: string) {
-	if (!convexBaseUrl()) {
-		const category = getStaticCategory(slug);
-		if (!category) throw error(404, 'Category not found.');
-
-		return {
-			...fallbackCategories().find((item) => item.slug === slug)!,
-			businesses: getStaticBusinessesByCategory(slug).map((business) => fallbackBusinessSummary(business))
-		};
-	}
-
 	const response = await request<{
 		category: RawCategory & { businesses: RawBusiness[] };
 	}>(`/api/v1/categories?slug=${encodeURIComponent(slug)}`);
@@ -236,10 +171,6 @@ export async function getCategory(slug: string) {
 }
 
 export async function getFeaturedBusinesses(limit = 6) {
-	if (!convexBaseUrl()) {
-		return staticBusinesses.slice(0, limit).map((business, index) => fallbackBusinessSummary(business, index));
-	}
-
 	const response = await request<{ businesses: RawBusiness[] }>(
 		`/api/v1/businesses?featured=1&limit=${limit}`
 	);
@@ -247,10 +178,6 @@ export async function getFeaturedBusinesses(limit = 6) {
 }
 
 export async function searchBusinesses(query: string) {
-	if (!convexBaseUrl()) {
-		return searchStaticBusinesses(query).map((business) => fallbackBusinessSummary(business));
-	}
-
 	const response = await request<{ businesses: RawBusiness[] }>(
 		`/api/v1/businesses?search=${encodeURIComponent(query)}`
 	);
@@ -258,12 +185,6 @@ export async function searchBusinesses(query: string) {
 }
 
 export async function getBusiness(slug: string) {
-	if (!convexBaseUrl()) {
-		const business = getStaticBusiness(slug);
-		if (!business) throw error(404, 'Business not found.');
-		return fallbackBusinessSummary(business);
-	}
-
 	const response = await request<{ business: RawBusiness }>(
 		`/api/v1/businesses?slug=${encodeURIComponent(slug)}`
 	);
@@ -271,12 +192,6 @@ export async function getBusiness(slug: string) {
 }
 
 export async function getBusinessWithReviews(slug: string): Promise<BusinessRecord> {
-	if (!convexBaseUrl()) {
-		const business = getStaticBusiness(slug);
-		if (!business) throw error(404, 'Business not found.');
-		return fallbackBusinessRecord(business);
-	}
-
 	const [business, reviewsResponse] = await Promise.all([
 		getBusiness(slug),
 		request<{ reviews: RawReview[] }>(`/api/v1/reviews?businessSlug=${encodeURIComponent(slug)}`)
@@ -295,10 +210,6 @@ export async function createReview(input: {
 	body: string;
 	user: AuthUser;
 }) {
-	if (!convexBaseUrl()) {
-		return { reviewId: `static-review-${Date.now()}` };
-	}
-
 	const user = {
 		id: input.user.id,
 		email: input.user.email,
@@ -316,10 +227,6 @@ export async function createReply(input: {
 	body: string;
 	user: AuthUser;
 }) {
-	if (!convexBaseUrl()) {
-		return { reviewId: input.reviewId };
-	}
-
 	const user = {
 		id: input.user.id,
 		email: input.user.email,

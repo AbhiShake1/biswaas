@@ -1,81 +1,273 @@
-import { action } from "./_generated/server";
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+import { businesses, categories } from "../src/lib/data/businesses";
 
-// Seed data for 5 categories with businesses
-const SEED_CATEGORIES = [
-  { name: "Education Consultancies", nameNe: "शैक्षिक परामर्शदाता", slug: "education-consultancies", description: "Study abroad consultancies, language schools, test prep centers", sortOrder: 1 },
-  { name: "E-Commerce & Online Shopping", nameNe: "ई-कमर्स", slug: "ecommerce", description: "Online marketplaces, food delivery, health & beauty platforms", sortOrder: 2 },
-  { name: "Trekking & Tourism", nameNe: "ट्रेकिङ र पर्यटन", slug: "trekking-tourism", description: "Trekking agencies, travel companies, hotels, adventure sports", sortOrder: 3 },
-  { name: "ISPs & Telecom", nameNe: "इन्टरनेट र टेलिकम", slug: "isp-telecom", description: "Internet service providers, mobile operators, digital TV", sortOrder: 4 },
-  { name: "Hospitals & Healthcare", nameNe: "अस्पताल र स्वास्थ्य", slug: "hospitals-healthcare", description: "Hospitals, clinics, diagnostic centers, pharmacies", sortOrder: 5 },
-];
-
-const SEED_BUSINESSES: Record<string, Array<{ name: string; slug: string; description: string; district: string; trustScore: number; totalReviews: number }>> = {
-  "education-consultancies": [
-    { name: "AECC Global Nepal", slug: "aecc-global-nepal", description: "Leading study abroad consultancy for Australia, UK, Canada", district: "Kathmandu", trustScore: 4.2, totalReviews: 87 },
-    { name: "KIEC", slug: "kiec", description: "Kathmandu Infosys Educational Consultancy - Japan, Korea specialist", district: "Kathmandu", trustScore: 3.8, totalReviews: 124 },
-    { name: "IDP Nepal", slug: "idp-nepal", description: "Official IELTS test center and study abroad services", district: "Kathmandu", trustScore: 4.5, totalReviews: 203 },
-    { name: "Edwise Foundation", slug: "edwise-foundation", description: "US, UK, Australia university admissions", district: "Kathmandu", trustScore: 3.5, totalReviews: 56 },
-    { name: "Global Reach Nepal", slug: "global-reach-nepal", description: "Comprehensive overseas education consultancy", district: "Kathmandu", trustScore: 4.0, totalReviews: 92 },
-    { name: "The Next Education", slug: "next-education", description: "Australia and New Zealand education specialist", district: "Kathmandu", trustScore: 3.9, totalReviews: 67 },
-    { name: "SAS Education", slug: "sas-education", description: "Japan and Korea study programs", district: "Lalitpur", trustScore: 3.7, totalReviews: 45 },
-    { name: "Alfa Beta Education", slug: "alfa-beta", description: "European university admissions", district: "Kathmandu", trustScore: 4.1, totalReviews: 78 },
-    { name: "Heritage Education", slug: "heritage-education", description: "UK and Ireland specialist", district: "Bhaktapur", trustScore: 3.6, totalReviews: 34 },
-    { name: "Aus Studies Nepal", slug: "aus-studies", description: "Australia focused education services", district: "Kathmandu", trustScore: 4.3, totalReviews: 112 },
-  ],
-  "ecommerce": [
-    { name: "Daraz Nepal", slug: "daraz-nepal", description: "Largest online marketplace in Nepal", district: "Kathmandu", trustScore: 2.1, totalReviews: 1543 },
-    { name: "SastoDeal", slug: "sastodeal", description: "Electronics and gadgets online store", district: "Kathmandu", trustScore: 3.2, totalReviews: 342 },
-    { name: "Foodmandu", slug: "foodmandu", description: "Food delivery service in Kathmandu valley", district: "Kathmandu", trustScore: 3.8, totalReviews: 567 },
-    { name: "HamroBazar", slug: "hamrobazar", description: "Buy and sell marketplace", district: "Kathmandu", trustScore: 3.0, totalReviews: 89 },
-    { name: "Jeevee", slug: "jeevee", description: "Health, beauty and wellness online store", district: "Lalitpur", trustScore: 4.1, totalReviews: 178 },
-    { name: "Thulo.com", slug: "thulo-com", description: "Multi-category online store", district: "Kathmandu", trustScore: 3.4, totalReviews: 234 },
-    { name: "OkDam", slug: "okdam", description: "Deal and coupon marketplace", district: "Kathmandu", trustScore: 3.6, totalReviews: 156 },
-    { name: "SmartDoko", slug: "smartdoko", description: "Grocery and daily essentials delivery", district: "Kathmandu", trustScore: 3.9, totalReviews: 289 },
-  ],
-  "trekking-tourism": [
-    { name: "Nepal Intrepid Treks", slug: "nepal-intrepid-treks", description: "Premium trekking and expedition company", district: "Kathmandu", trustScore: 4.6, totalReviews: 312 },
-    { name: "Himalayan Temple Tours", slug: "himalayan-temple-tours", description: "Cultural tours and trekking in Nepal", district: "Kathmandu", trustScore: 4.3, totalReviews: 189 },
-    { name: "Real Sherpa Adventures", slug: "real-sherpa-adventures", description: "Authentic Sherpa-led trekking experiences", district: "Solukhumbu", trustScore: 4.7, totalReviews: 245 },
-    { name: "Adventure Vision Treks", slug: "adventure-vision-treks", description: "Budget-friendly trekking packages", district: "Kathmandu", trustScore: 3.9, totalReviews: 134 },
-    { name: "Everest Holiday", slug: "everest-holiday", description: "Everest region specialist tours", district: "Kathmandu", trustScore: 4.1, totalReviews: 98 },
-    { name: "Nepal Wilderness Trekking", slug: "nepal-wilderness", description: "Off-the-beaten-path adventures", district: "Pokhara", trustScore: 4.4, totalReviews: 167 },
-    { name: "World Eco Expeditions", slug: "world-eco-expeditions", description: "Eco-friendly trekking company", district: "Kathmandu", trustScore: 4.2, totalReviews: 143 },
-    { name: "Kathmandu Adventure Treks", slug: "kathmandu-adventure", description: "Multi-day trekking and tours", district: "Kathmandu", trustScore: 3.8, totalReviews: 89 },
-  ],
-  "isp-telecom": [
-    { name: "WorldLink Communications", slug: "worldlink", description: "Largest ISP in Nepal with fiber internet", district: "Kathmandu", trustScore: 3.1, totalReviews: 892 },
-    { name: "Vianet Communications", slug: "vianet", description: "Fiber and wireless internet provider", district: "Kathmandu", trustScore: 3.4, totalReviews: 456 },
-    { name: "Nepal Telecom", slug: "nepal-telecom", description: "State-owned telecom operator", district: "Kathmandu", trustScore: 2.8, totalReviews: 1204 },
-    { name: "Ncell", slug: "ncell", description: "Private mobile operator", district: "Lalitpur", trustScore: 3.0, totalReviews: 987 },
-    { name: "Classic Tech", slug: "classic-tech", description: "FTTH internet and digital TV", district: "Kathmandu", trustScore: 3.6, totalReviews: 234 },
-    { name: "Subisu Cablenet", slug: "subisu", description: "Cable internet and TV provider", district: "Kathmandu", trustScore: 2.9, totalReviews: 567 },
-    { name: "CG Net", slug: "cg-net", description: "Fiber internet by CG Group", district: "Kathmandu", trustScore: 3.3, totalReviews: 178 },
-    { name: "DishHome", slug: "dishhome", description: "Satellite TV and internet", district: "Kathmandu", trustScore: 3.2, totalReviews: 345 },
-  ],
-  "hospitals-healthcare": [
-    { name: "Norvic International Hospital", slug: "norvic-hospital", description: "Multi-specialty international hospital", district: "Kathmandu", trustScore: 4.0, totalReviews: 345 },
-    { name: "Grande International Hospital", slug: "grande-hospital", description: "Modern healthcare facility in Kathmandu", district: "Kathmandu", trustScore: 4.2, totalReviews: 278 },
-    { name: "Nepal Mediciti Hospital", slug: "nepal-mediciti", description: "State-of-the-art medical center", district: "Lalitpur", trustScore: 3.8, totalReviews: 456 },
-    { name: "B&B Hospital", slug: "bb-hospital", description: "Leading private hospital in Lalitpur", district: "Lalitpur", trustScore: 3.5, totalReviews: 567 },
-    { name: "CIWEC Hospital", slug: "ciwec-hospital", description: "International clinic and travel medicine", district: "Kathmandu", trustScore: 4.4, totalReviews: 123 },
-    { name: "Star Hospital", slug: "star-hospital", description: "Multi-specialty hospital", district: "Kathmandu", trustScore: 3.7, totalReviews: 234 },
-    { name: "Patan Hospital", slug: "patan-hospital", description: "Teaching hospital in Lalitpur", district: "Lalitpur", trustScore: 3.9, totalReviews: 456 },
-    { name: "TU Teaching Hospital", slug: "tuth", description: "Tribhuvan University teaching hospital", district: "Kathmandu", trustScore: 3.3, totalReviews: 678 },
-  ],
+const CATEGORY_TRANSLATIONS: Record<string, string> = {
+  "education-consultancies": "शैक्षिक परामर्शदाता",
+  ecommerce: "ई-कमर्स",
+  "trekking-tourism": "ट्रेकिङ र पर्यटन",
+  "isp-telecom": "इन्टरनेट र टेलिकम",
+  "hospitals-healthcare": "अस्पताल र स्वास्थ्य",
 };
 
-export const seedAll = action({
-  args: {},
-  handler: async (ctx) => {
-    // This is a Convex action for seeding - would be called from admin UI
-    // In practice, this would use ctx.runMutation to insert data
-    console.log("Seed data ready:", {
-      categories: SEED_CATEGORIES.length,
-      businesses: Object.values(SEED_BUSINESSES).flat().length,
+const now = Date.now();
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function reviewTimestamp(value: string, offsetMinutes = 0) {
+  return new Date(`${value}T12:00:00.000Z`).getTime() + offsetMinutes * 60_000;
+}
+
+async function ensureUser(
+  ctx: any,
+  input: { workosId: string; email: string; name: string; role?: "consumer" | "business_owner" | "admin" }
+) {
+  const existingByWorkosId = await ctx.db
+    .query("users")
+    .withIndex("by_workosId", (q: any) => q.eq("workosId", input.workosId))
+    .unique();
+
+  if (existingByWorkosId) {
+    await ctx.db.patch(existingByWorkosId._id, {
+      email: input.email,
+      name: input.name,
+      role: input.role ?? existingByWorkosId.role,
+      updatedAt: now,
     });
+    return existingByWorkosId._id;
+  }
+
+  const existingByEmail = await ctx.db
+    .query("users")
+    .withIndex("by_email", (q: any) => q.eq("email", input.email))
+    .unique();
+
+  if (existingByEmail) {
+    await ctx.db.patch(existingByEmail._id, {
+      workosId: input.workosId,
+      name: input.name,
+      role: input.role ?? existingByEmail.role,
+      updatedAt: now,
+    });
+    return existingByEmail._id;
+  }
+
+  return await ctx.db.insert("users", {
+    workosId: input.workosId,
+    email: input.email,
+    name: input.name,
+    avatarUrl: undefined,
+    role: input.role ?? "consumer",
+    reviewCount: 0,
+    isVerified: false,
+    language: "en",
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+
+export const seedFocusedDataset = mutation({
+  args: {
+    reset: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const reset = args.reset ?? true;
+
+    const seededCategoryIds = new Map<string, any>();
+    const seededBusinessIds = new Map<string, any>();
+
+    const seededBusinessSlugs = new Set(businesses.map((business) => business.slug));
+    const seededCategorySlugs = new Set(categories.map((category) => category.slug));
+
+    if (reset) {
+      for (const businessSlug of seededBusinessSlugs) {
+        const existingBusiness = await ctx.db
+          .query("businesses")
+          .withIndex("by_slug", (q: any) => q.eq("slug", businessSlug))
+          .unique();
+
+        if (!existingBusiness) continue;
+
+        const existingReviews = await ctx.db
+          .query("reviews")
+          .withIndex("by_businessId_createdAt", (q: any) => q.eq("businessId", existingBusiness._id))
+          .collect();
+
+        for (const review of existingReviews) {
+          await ctx.db.delete(review._id);
+        }
+
+        const existingLinks = await ctx.db
+          .query("businessCategories")
+          .withIndex("by_businessId", (q: any) => q.eq("businessId", existingBusiness._id))
+          .collect();
+
+        for (const link of existingLinks) {
+          await ctx.db.delete(link._id);
+        }
+
+        await ctx.db.delete(existingBusiness._id);
+      }
+
+      for (const categorySlug of seededCategorySlugs) {
+        const existingCategory = await ctx.db
+          .query("categories")
+          .withIndex("by_slug", (q: any) => q.eq("slug", categorySlug))
+          .unique();
+
+        if (existingCategory) {
+          await ctx.db.delete(existingCategory._id);
+        }
+      }
+    }
+
+    for (const [index, category] of categories.entries()) {
+      const businessCount = businesses.filter((business) => business.categorySlug === category.slug).length;
+
+      const categoryId = await ctx.db.insert("categories", {
+        name: category.name,
+        nameNe: CATEGORY_TRANSLATIONS[category.slug] ?? category.name,
+        slug: category.slug,
+        description: category.description,
+        descriptionNe: undefined,
+        iconUrl: undefined,
+        parentId: undefined,
+        businessCount,
+        sortOrder: index + 1,
+        isActive: true,
+        createdAt: now,
+      });
+
+      seededCategoryIds.set(category.slug, categoryId);
+    }
+
+    for (const business of businesses) {
+      const categoryId = seededCategoryIds.get(business.categorySlug);
+      if (!categoryId) {
+        throw new Error(`Missing seeded category for ${business.categorySlug}`);
+      }
+
+      const businessId = await ctx.db.insert("businesses", {
+        name: business.name,
+        nameNe: undefined,
+        slug: business.slug,
+        description: business.description,
+        descriptionNe: undefined,
+        websiteUrl: business.websiteUrl,
+        phone: business.phone,
+        email: undefined,
+        logoStorageId: undefined,
+        coverStorageId: undefined,
+        province: undefined,
+        district: business.district,
+        municipality: business.municipality,
+        address: business.address,
+        coordinates: undefined,
+        primaryCategoryId: categoryId,
+        trustScore: business.trustScore,
+        starRating: business.starRating,
+        totalReviews: business.totalReviews,
+        ratingDistribution: business.ratingDistribution,
+        claimedByUserId: undefined,
+        isClaimed: false,
+        isVerified: true,
+        status: "active",
+        metaTitle: undefined,
+        metaDescription: undefined,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      seededBusinessIds.set(business.slug, businessId);
+
+      await ctx.db.insert("businessCategories", {
+        businessId,
+        categoryId,
+      });
+    }
+
+    let insertedReviews = 0;
+    const seededUserIds = new Set<any>();
+
+    for (const business of businesses) {
+      const businessId = seededBusinessIds.get(business.slug);
+      if (!businessId) continue;
+
+      for (const [reviewIndex, review] of business.reviews.entries()) {
+        const authorSlug = slugify(review.author);
+        const authorId = await ensureUser(ctx, {
+          workosId: `seed-user-${authorSlug}`,
+          email: `seed+${authorSlug}@biswaas.local`,
+          name: review.author,
+        });
+        seededUserIds.add(authorId);
+
+        let repliedByUserId = undefined;
+        let replyText = undefined;
+        let replyAt = undefined;
+
+        if (review.replies?.length) {
+          const reply = review.replies[0];
+          const replySlug = slugify(reply.author);
+          repliedByUserId = await ensureUser(ctx, {
+            workosId: `seed-user-${replySlug}`,
+            email: `seed+${replySlug}@biswaas.local`,
+            name: reply.author,
+            role: "business_owner",
+          });
+          seededUserIds.add(repliedByUserId);
+          replyText = reply.body;
+          replyAt = reviewTimestamp(reply.createdAt, reviewIndex);
+        }
+
+        await ctx.db.insert("reviews", {
+          businessId,
+          authorId,
+          stars: review.stars as 1 | 2 | 3 | 4 | 5,
+          title: review.title,
+          body: review.body,
+          language: "en",
+          source: review.source ?? "organic",
+          isVerified: review.source === "organic",
+          googleReviewId: undefined,
+          helpfulCount: 0,
+          reportCount: 0,
+          moderationStatus: "visible",
+          replyText,
+          replyAt,
+          repliedByUserId,
+          createdAt: reviewTimestamp(review.createdAt, reviewIndex),
+          updatedAt: reviewTimestamp(review.createdAt, reviewIndex),
+        });
+
+        insertedReviews += 1;
+      }
+    }
+
+    for (const userId of seededUserIds) {
+      const userReviews = await ctx.db
+        .query("reviews")
+        .withIndex("by_authorId", (q: any) => q.eq("authorId", userId))
+        .collect();
+
+      const user = await ctx.db.get(userId);
+      if (user) {
+        await ctx.db.patch(userId, {
+          reviewCount: userReviews.length,
+          updatedAt: now,
+        });
+      }
+    }
+
     return {
-      categories: SEED_CATEGORIES.length,
-      businesses: Object.values(SEED_BUSINESSES).flat().length,
+      categories: seededCategoryIds.size,
+      businesses: seededBusinessIds.size,
+      reviews: insertedReviews,
     };
   },
 });

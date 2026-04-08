@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2026-04-01"
 
 [vars]
-CONVEX_URL = "https://your-convex-deployment.convex.cloud"
+CONVEX_URL = "https://outgoing-warbler-836.convex.site"
 
 [[routes]]
 pattern = "api.biswaas.np/v1/*"

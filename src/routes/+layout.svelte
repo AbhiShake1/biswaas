@@ -24,8 +24,8 @@
       Skip to content
     </a>
     <Header user={data.user} onToggleMobile={() => (mobileOpen = !mobileOpen)} />
-    <CategoryNav />
-    <MobileNav open={mobileOpen} onClose={() => (mobileOpen = false)} />
+    <CategoryNav categories={data.categories} />
+    <MobileNav categories={data.categories} open={mobileOpen} onClose={() => (mobileOpen = false)} />
   {/if}
 
   <main id="main-content" class="relative flex-1">

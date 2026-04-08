@@ -1,8 +1,15 @@
 <script lang="ts">
   import { X } from '@lucide/svelte';
-  import { categories } from '$lib/data/businesses';
 
-  let { open = false, onClose = () => {} }: { open: boolean; onClose: () => void } = $props();
+  let {
+    open = false,
+    onClose = () => {},
+    categories = []
+  }: {
+    open: boolean;
+    onClose: () => void;
+    categories: Array<{ slug: string; name: string }>;
+  } = $props();
 </script>
 
 {#if open}
