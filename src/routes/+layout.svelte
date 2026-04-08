@@ -14,11 +14,14 @@
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
+    Skip to content
+  </a>
   <Header user={data.user} onToggleMobile={() => (mobileOpen = !mobileOpen)} />
   <CategoryNav />
   <MobileNav open={mobileOpen} onClose={() => (mobileOpen = false)} />
 
-  <main class="flex-1">
+  <main id="main-content" class="flex-1">
     {@render children()}
   </main>
 

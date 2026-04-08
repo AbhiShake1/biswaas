@@ -1,0 +1,10 @@
+name = "biswaas-api-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+
+[vars]
+CONVEX_URL = "https://your-convex-deployment.convex.cloud"
+
+[[routes]]
+pattern = "api.biswaas.np/v1/*"
+zone_name = "biswaas.np"
