@@ -1,6 +1,10 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Star, MapPin, Globe, Phone, Shield, ThumbsUp } from '@lucide/svelte';
+  import LocationMap from '$lib/components/business/LocationMap.svelte';
+  import BookmarkButton from '$lib/components/business/BookmarkButton.svelte';
+  import AttributeRating from '$lib/components/review/AttributeRating.svelte';
+  import ReviewHighlights from '$lib/components/review/ReviewHighlights.svelte';
 
   let slug = $derived($page.params.businessSlug);
 
@@ -21,7 +25,16 @@
     websiteUrl: 'https://example.com',
     isClaimed: false,
     isVerified: true,
+    lat: 27.7103,
+    lng: 85.3222,
   });
+
+  const mockAttributes = [
+    { name: 'Application Support', score: 4 },
+    { name: 'Visa Guidance', score: 3 },
+    { name: 'Communication', score: 5 },
+    { name: 'Value for Money', score: 3 },
+  ];
 
   const mockReviews = [
     { id: '1', author: 'Ram B.', stars: 5, title: 'Excellent service', body: 'Very professional and helped me get admission to my dream university in Australia. Highly recommended!', createdAt: Date.now() - 86400000 * 3, helpfulCount: 12, source: 'organic' },
@@ -96,9 +109,16 @@
     <div class="lg:col-span-2">
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-xl font-bold">Reviews ({mockBusiness.totalReviews})</h2>
-        <a href="/review/{slug}/write" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          Write a Review
-        </a>
+        <div class="flex items-center gap-2">
+          <BookmarkButton businessSlug={slug} />
+          <a href="/review/{slug}/write" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Write a Review
+          </a>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <ReviewHighlights reviews={mockReviews} />
       </div>
 
       <div class="space-y-4">
@@ -143,6 +163,14 @@
 
     <!-- Right: Score Sidebar -->
     <div>
+      <div class="mb-4">
+        <LocationMap address={mockBusiness.address} lat={mockBusiness.lat} lng={mockBusiness.lng} />
+      </div>
+
+      <div class="mb-4">
+        <AttributeRating attributes={mockAttributes} />
+      </div>
+
       <div class="sticky top-20 rounded-lg border p-6">
         <div class="text-center">
           <div class="text-4xl font-bold">{mockBusiness.trustScore}</div>
