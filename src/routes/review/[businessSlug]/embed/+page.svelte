@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { Award, Check, Copy, ExternalLink, Star, PanelsTopLeft } from '@lucide/svelte';
-  import { getBusiness } from '$lib/data/businesses';
   import { buildIframeCode, embedWidgets } from '$lib/data/embed';
+  let { data } = $props();
 
-  let slug = $derived($page.params.businessSlug ?? '');
-  let business = $derived(getBusiness(slug));
+  let business = $derived(data.business);
   let copiedId = $state<string | null>(null);
 
   const widgetIcons = {

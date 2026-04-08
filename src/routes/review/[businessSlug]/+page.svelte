@@ -1,14 +1,9 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { Globe, MapPin, MessageSquareReply, Phone, Star } from '@lucide/svelte';
-  import { getBusiness } from '$lib/data/businesses';
-  import type { ReplyRecord } from '$lib/data/businesses';
+  let { data, form }: { data: import('./$types').PageData; form: any } = $props();
 
-  let slug = $derived($page.params.businessSlug ?? '');
-  let business = $derived(getBusiness(slug));
-  let currentUser = $derived($page.data.user ?? null);
-  let replyDrafts = $state<Record<string, string>>({});
-  let localReplies = $state<Record<string, ReplyRecord[]>>({});
+  let business = $derived(data.business);
+  let currentUser = $derived(data.user ?? null);
 
   function formatDate(date: string) {
     return new Date(date).toLocaleDateString('en-US', {
@@ -27,34 +22,6 @@
       ? Object.values(business.ratingDistribution).reduce((sum, count) => sum + count, 0)
       : 0
   );
-
-  function repliesFor(reviewId: string, seeded: ReplyRecord[] = []) {
-    return [...seeded, ...(localReplies[reviewId] ?? [])];
-  }
-
-  function submitReply(reviewId: string) {
-    if (!currentUser) return;
-
-    const body = replyDrafts[reviewId]?.trim();
-    if (!body) return;
-
-    const reply: ReplyRecord = {
-      id: `${reviewId}-${Date.now()}`,
-      author: currentUser.name,
-      body,
-      createdAt: new Date().toISOString()
-    };
-
-    localReplies = {
-      ...localReplies,
-      [reviewId]: [...(localReplies[reviewId] ?? []), reply]
-    };
-
-    replyDrafts = {
-      ...replyDrafts,
-      [reviewId]: ''
-    };
-  }
 </script>
 
 <svelte:head>
@@ -102,7 +69,7 @@
             <h2 class="text-xl font-bold">Comments and Ratings</h2>
             <p class="text-sm text-muted-foreground">{business.totalReviews} reviews from customers</p>
           </div>
-          <a href="/review/{slug}/write" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <a href="/review/{business.slug}/write" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             Write a Review
           </a>
         </div>
@@ -130,9 +97,9 @@
               <h3 class="mt-2 font-medium">{review.title}</h3>
               <p class="mt-1 text-sm text-muted-foreground">{review.body}</p>
 
-              {#if repliesFor(review.id, review.replies).length > 0}
+              {#if review.replies && review.replies.length > 0}
                 <div class="mt-4 space-y-3 border-l border-muted pl-4">
-                  {#each repliesFor(review.id, review.replies) as reply}
+                  {#each review.replies as reply}
                     <div class="rounded-md bg-muted/40 p-3">
                       <div class="flex items-center gap-2 text-xs">
                         <span class="font-semibold text-foreground">{reply.author}</span>
@@ -151,29 +118,33 @@
                 </div>
 
                 {#if currentUser}
-                  <textarea
-                    data-testid="reply-input"
-                    data-review-id={review.id}
-                    class="min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                    placeholder="Add your reply"
-                    value={replyDrafts[review.id] ?? ''}
-                    oninput={(event) =>
-                      (replyDrafts = {
-                        ...replyDrafts,
-                        [review.id]: (event.currentTarget as HTMLTextAreaElement).value
-                      })}
-                  ></textarea>
-                  <div class="mt-3 flex items-center justify-between">
-                    <span class="text-xs text-muted-foreground">Posting as {currentUser.name}</span>
-                    <button
-                      data-testid="reply-submit"
+                  <form method="POST" action="?/reply">
+                    <input type="hidden" name="reviewId" value={review.id} />
+                    <textarea
+                      data-testid="reply-input"
                       data-review-id={review.id}
-                      class="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                      onclick={() => submitReply(review.id)}
-                    >
-                      Reply
-                    </button>
-                  </div>
+                      class="min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      placeholder="Add your reply"
+                      name="body"
+                    ></textarea>
+                    <div class="mt-3 flex items-center justify-between">
+                      <span class="text-xs text-muted-foreground">Posting as {currentUser.name}</span>
+                      <button
+                        data-testid="reply-submit"
+                        data-review-id={review.id}
+                        class="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                        type="submit"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                    {#if form?.replyError && form?.replyReviewId === review.id}
+                      <p class="mt-2 text-sm text-destructive">{form.replyError}</p>
+                    {/if}
+                    {#if form?.replySuccess && form?.replyReviewId === review.id}
+                      <p class="mt-2 text-sm text-green-700">Reply posted.</p>
+                    {/if}
+                  </form>
                 {:else}
                   <p class="text-sm text-muted-foreground">
                     <a href="/auth/login" class="font-medium text-primary hover:underline">Sign in</a>

@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { Star } from '@lucide/svelte';
-  import { getBusiness } from '$lib/data/businesses';
+  let { data } = $props();
 
-  let slug = $derived($page.params.businessSlug ?? '');
-  let business = $derived(getBusiness(slug));
+  let business = $derived(data.business);
 
   function starArray(count: number) {
     return Array.from({ length: 5 }, (_, index) => index < count);

@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { MapPin, Star } from '@lucide/svelte';
-  import { getBusinessesByCategory, getCategory } from '$lib/data/businesses';
+  let { data } = $props();
 
-  let slug = $derived($page.params.slug ?? '');
-  let category = $derived(getCategory(slug));
-  let categoryBusinesses = $derived(getBusinessesByCategory(slug));
+  let category = $derived(data.category);
+  let categoryBusinesses = $derived(data.category?.businesses ?? []);
 
   function starArray(count: number) {
     return Array.from({ length: 5 }, (_, index) => index < count);

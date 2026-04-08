@@ -1,4 +1,4 @@
-import type { BusinessRecord } from '$lib/data/businesses';
+import type { BusinessSummary } from '$lib/types/business';
 
 export type EmbedWidget = {
   id: 'badge' | 'stars' | 'carousel';
@@ -32,6 +32,6 @@ export const embedWidgets: EmbedWidget[] = [
   }
 ];
 
-export function buildIframeCode(origin: string, business: BusinessRecord, widget: EmbedWidget) {
+export function buildIframeCode(origin: string, business: BusinessSummary, widget: EmbedWidget) {
   return `<iframe src="${origin}/embed/${widget.id}/${business.slug}" width="${widget.width}" height="${widget.height}" frameborder="0" loading="lazy" title="${business.name} ${widget.name}"></iframe>`;
 }

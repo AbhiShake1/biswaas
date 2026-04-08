@@ -1,14 +1,10 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { MapPin, Star } from '@lucide/svelte';
-  import { searchBusinesses } from '$lib/data/businesses';
-
-  let query = $derived($page.url.searchParams.get('q') ?? '');
-  let results = $derived(searchBusinesses(query));
+  let { data } = $props();
 </script>
 
 <svelte:head>
-  <title>{query ? `"${query}" — Search` : 'Search'} — Biswaas</title>
+  <title>{data.query ? `"${data.query}" — Search` : 'Search'} — Biswaas</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
@@ -19,17 +15,17 @@
     <input
       type="search"
       name="q"
-      value={query}
+      value={data.query}
       placeholder="Try Kathmandu, Pokhara, Education, or a business name"
       class="w-full rounded-md border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
     />
   </form>
 
-  {#if query}
-    <p class="mt-4 text-sm text-muted-foreground">{results.length} result{results.length === 1 ? '' : 's'} for "{query}"</p>
+  {#if data.query}
+    <p class="mt-4 text-sm text-muted-foreground">{data.results.length} result{data.results.length === 1 ? '' : 's'} for "{data.query}"</p>
 
     <div class="mt-4 space-y-3">
-      {#each results as business}
+      {#each data.results as business}
         <a href="/review/{business.slug}" class="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-bold text-muted-foreground">
             {business.name.charAt(0)}
@@ -51,8 +47,8 @@
       {/each}
     </div>
 
-    {#if results.length === 0}
-      <p class="mt-4 text-sm text-muted-foreground">No results found for "{query}"</p>
+    {#if data.results.length === 0}
+      <p class="mt-4 text-sm text-muted-foreground">No results found for "{data.query}"</p>
     {/if}
   {/if}
 </div>

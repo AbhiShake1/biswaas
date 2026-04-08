@@ -1,6 +1,25 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 
+async function withCategory(ctx: any, business: any) {
+  const category = await ctx.db.get(business.primaryCategoryId);
+  const logoUrl = business.logoStorageId
+    ? await ctx.storage.getUrl(business.logoStorageId)
+    : null;
+  const coverUrl = business.coverStorageId
+    ? await ctx.storage.getUrl(business.coverStorageId)
+    : null;
+
+  return {
+    ...business,
+    category,
+    categoryName: category?.name ?? "Uncategorized",
+    categorySlug: category?.slug ?? "",
+    logoUrl,
+    coverUrl,
+  };
+}
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
@@ -10,15 +29,7 @@ export const getBySlug = query({
       .unique();
     if (!business) return null;
 
-    const category = await ctx.db.get(business.primaryCategoryId);
-    const logoUrl = business.logoStorageId
-      ? await ctx.storage.getUrl(business.logoStorageId)
-      : null;
-    const coverUrl = business.coverStorageId
-      ? await ctx.storage.getUrl(business.coverStorageId)
-      : null;
-
-    return { ...business, category, logoUrl, coverUrl };
+    return withCategory(ctx, business);
   },
 });
 
@@ -46,12 +57,7 @@ export const listByCategory = query({
     const items = all.slice(start, start + pageSize);
 
     const itemsWithLogos = await Promise.all(
-      items.map(async (b) => ({
-        ...b,
-        logoUrl: b.logoStorageId
-          ? await ctx.storage.getUrl(b.logoStorageId)
-          : null,
-      }))
+      items.map(async (b) => withCategory(ctx, b))
     );
 
     return {
@@ -69,20 +75,45 @@ export const search = query({
   handler: async (ctx, args) => {
     if (!args.query.trim()) return [];
 
+    const query = args.query.trim().toLowerCase();
     const results = await ctx.db
       .query("businesses")
-      .withSearchIndex("search_name", (q) =>
-        q.search("name", args.query).eq("status", "active")
+      .withIndex("by_status_trustScore", (q) =>
+        q.eq("status", "active")
       )
-      .take(20);
+      .collect();
 
-    return Promise.all(
-      results.map(async (b) => ({
-        ...b,
-        logoUrl: b.logoStorageId
-          ? await ctx.storage.getUrl(b.logoStorageId)
-          : null,
-      }))
-    );
+    const enriched = await Promise.all(results.map((business) => withCategory(ctx, business)));
+
+    return enriched
+      .filter((business) =>
+        [
+          business.name,
+          business.description,
+          business.district,
+          business.municipality,
+          business.address,
+          business.categoryName,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query))
+      )
+      .sort((a, b) => b.trustScore - a.trustScore)
+      .slice(0, 20);
+  },
+});
+
+export const listFeatured = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 6;
+
+    const businesses = await ctx.db
+      .query("businesses")
+      .withIndex("by_status_trustScore", (q) => q.eq("status", "active"))
+      .collect();
+
+    const enriched = await Promise.all(businesses.map((business) => withCategory(ctx, business)));
+    return enriched.sort((a, b) => b.trustScore - a.trustScore).slice(0, limit);
   },
 });
