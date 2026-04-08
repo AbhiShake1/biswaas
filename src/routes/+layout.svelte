@@ -5,6 +5,7 @@
   import MobileNav from '$lib/components/layout/MobileNav.svelte';
   import CategoryNav from '$lib/components/layout/CategoryNav.svelte';
   import CookieConsent from '$lib/components/CookieConsent.svelte';
+  import OnboardingTour from '$lib/components/OnboardingTour.svelte';
 
   let { children, data } = $props();
   let mobileOpen = $state(false);
@@ -28,4 +29,5 @@
 
   <Footer />
   <CookieConsent />
+  <OnboardingTour />
 </div>
