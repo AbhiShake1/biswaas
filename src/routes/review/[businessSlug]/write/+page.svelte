@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Star } from '@lucide/svelte';
+  import ReviewPhotoUpload from '$lib/components/review/ReviewPhotoUpload.svelte';
 
   let slug = $derived($page.params.businessSlug);
   let businessName = $derived(slug?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') ?? 'Business');
@@ -92,6 +93,9 @@
           class="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         ></textarea>
       </div>
+
+      <!-- Photo Upload -->
+      <ReviewPhotoUpload />
 
       <button
         type="submit"

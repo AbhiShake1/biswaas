@@ -5,6 +5,7 @@
   import BookmarkButton from '$lib/components/business/BookmarkButton.svelte';
   import AttributeRating from '$lib/components/review/AttributeRating.svelte';
   import ReviewHighlights from '$lib/components/review/ReviewHighlights.svelte';
+  import ReviewActions from '$lib/components/review/ReviewActions.svelte';
 
   let slug = $derived($page.params.businessSlug);
 
@@ -37,10 +38,10 @@
   ];
 
   const mockReviews = [
-    { id: '1', author: 'Ram B.', stars: 5, title: 'Excellent service', body: 'Very professional and helped me get admission to my dream university in Australia. Highly recommended!', createdAt: Date.now() - 86400000 * 3, helpfulCount: 12, source: 'organic' },
-    { id: '2', author: 'Sita K.', stars: 4, title: 'Good but expensive', body: 'They provided good guidance but the consultation fee was a bit high compared to others.', createdAt: Date.now() - 86400000 * 7, helpfulCount: 5, source: 'organic' },
-    { id: '3', author: 'Hari P.', stars: 2, title: 'Delayed processing', body: 'My application took much longer than promised. Communication could be better.', createdAt: Date.now() - 86400000 * 14, helpfulCount: 8, source: 'imported', replyText: 'We apologize for the delay. We have improved our processing times since then.' },
-    { id: '4', author: 'Gita S.', stars: 5, title: 'Best consultancy in Kathmandu', body: 'They walked me through every step of the process. Got my visa on the first attempt!', createdAt: Date.now() - 86400000 * 21, helpfulCount: 15, source: 'organic' },
+    { id: '1', author: 'Ram B.', stars: 5, title: 'Excellent service', body: 'Very professional and helped me get admission to my dream university in Australia. Highly recommended!', createdAt: Date.now() - 86400000 * 3, helpfulCount: 12, source: 'organic', isOwner: true },
+    { id: '2', author: 'Sita K.', stars: 4, title: 'Good but expensive', body: 'They provided good guidance but the consultation fee was a bit high compared to others.', createdAt: Date.now() - 86400000 * 7, helpfulCount: 5, source: 'organic', isOwner: false },
+    { id: '3', author: 'Hari P.', stars: 2, title: 'Delayed processing', body: 'My application took much longer than promised. Communication could be better.', createdAt: Date.now() - 86400000 * 14, helpfulCount: 8, source: 'imported', replyText: 'We apologize for the delay. We have improved our processing times since then.', isOwner: false },
+    { id: '4', author: 'Gita S.', stars: 5, title: 'Best consultancy in Kathmandu', body: 'They walked me through every step of the process. Got my visa on the first attempt!', createdAt: Date.now() - 86400000 * 21, helpfulCount: 15, source: 'organic', isOwner: false },
   ];
 
   function formatDate(ts: number) {
@@ -151,10 +152,17 @@
               </div>
             {/if}
 
-            <div class="mt-3 flex items-center gap-3">
+            <div class="mt-3 flex items-center justify-between">
               <button class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                 <ThumbsUp class="h-3 w-3" /> Helpful ({review.helpfulCount})
               </button>
+              <ReviewActions
+                reviewId={review.id}
+                reviewTitle={review.title}
+                reviewBody={review.body}
+                reviewStars={review.stars}
+                isOwner={review.isOwner}
+              />
             </div>
           </div>
         {/each}
