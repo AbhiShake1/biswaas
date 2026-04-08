@@ -3,7 +3,7 @@
   import { Search, Star } from '@lucide/svelte';
 
   let query = $derived($page.url.searchParams.get('q') ?? '');
-  let searchInput = $state(query);
+  let searchInput = $state($page.url.searchParams.get('q') ?? '');
 
   // Mock search results
   const allBusinesses = [
@@ -32,6 +32,7 @@
   <form action="/search" method="GET" class="mx-auto max-w-xl">
     <div class="relative">
       <Search class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+      <!-- svelte-ignore a11y_autofocus -->
       <input
         type="search"
         name="q"
