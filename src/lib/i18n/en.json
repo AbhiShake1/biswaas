@@ -1,0 +1,9 @@
+{
+  "app": { "name": "Biswaas", "tagline": "Nepal's Trust & Review Platform" },
+  "nav": { "home": "Home", "categories": "Categories", "search": "Search", "signIn": "Sign In", "signOut": "Sign Out", "dashboard": "Dashboard" },
+  "hero": { "title": "विश्वास Biswaas", "subtitle": "Nepal's trusted review platform. Find honest reviews for businesses across Nepal.", "searchPlaceholder": "Search for a business, category, or service..." },
+  "categories": { "all": "All Categories", "education": "Education Consultancies", "ecommerce": "E-Commerce", "trekking": "Trekking & Tourism", "isp": "ISPs & Telecom", "healthcare": "Hospitals & Healthcare" },
+  "business": { "reviews": "Reviews", "writeReview": "Write a Review", "claimBusiness": "Claim This Business", "verified": "Verified", "basedOn": "Based on", "reviewsText": "reviews" },
+  "review": { "title": "Review Title", "body": "Your Review", "rating": "Your Rating", "submit": "Submit Review", "helpful": "Helpful", "replyFrom": "Reply from business" },
+  "footer": { "builtFor": "Built for Nepal", "forBusinesses": "For Businesses", "platform": "Platform", "about": "About Biswaas", "api": "API Documentation" }
+}
