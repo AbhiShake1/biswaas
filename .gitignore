@@ -22,8 +22,9 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Evidence (screenshots for PRs - uploaded separately)
-/evidence
+# Evidence videos (too large for git)
+evidence/*.webm
+evidence/*.mp4
 
 # Claude
 .claude/
