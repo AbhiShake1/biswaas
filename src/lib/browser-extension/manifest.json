@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Biswaas Trust Score",
+  "version": "1.0.0",
+  "description": "See Biswaas trust scores next to Google search results for Nepali businesses",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://www.google.com/*", "https://www.google.com.np/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/search*", "https://www.google.com.np/search*"],
+      "js": ["content.js"],
+      "css": [],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  }
+}
