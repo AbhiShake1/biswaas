@@ -64,6 +64,8 @@ import { computeDiff, type DiffResult } from "./diffReport.ts";
 type CliOptions = {
 	dry?: boolean;
 	out?: string;
+	legacyCategoryMap?: boolean;
+	withStats?: boolean;
 };
 
 type UpsertResult = {
@@ -161,14 +163,17 @@ function normalizeCategories(
 	return scraped.map((row, i) => normalizeCategory(row, i));
 }
 
-function normalizeBusinessesBatch(scraped: ScrapedBusiness[]): {
+function normalizeBusinessesBatch(
+	scraped: ScrapedBusiness[],
+	useSourceCategory: boolean,
+): {
 	mapped: NormalizedBusiness[];
 	unmapped: UnmappedBusiness[];
 } {
 	const mapped: NormalizedBusiness[] = [];
 	const unmapped: UnmappedBusiness[] = [];
 	for (const row of scraped) {
-		const result = normalizeBusiness(row);
+		const result = normalizeBusiness(row, { useSourceCategory });
 		if (isUnmappedBusiness(result)) {
 			unmapped.push(result);
 		} else {
@@ -420,9 +425,10 @@ async function main(folder: string, opts: CliOptions): Promise<number> {
 	);
 
 	// 4 · normalize
+	const useSourceCategory = !opts.legacyCategoryMap;
 	const normalizedCategories = normalizeCategories(scrapedCategories);
 	const { mapped: normalizedBusinesses, unmapped } =
-		normalizeBusinessesBatch(scrapedBusinesses);
+		normalizeBusinessesBatch(scrapedBusinesses, useSourceCategory);
 
 	// Write _unmapped.json regardless — empty array is a valid signal too.
 	const unmappedPath = join(abs, "_unmapped.json");
@@ -478,8 +484,18 @@ async function main(folder: string, opts: CliOptions): Promise<number> {
 	const catResult = await ingestCategories(normalizedCategories);
 	const bizResult = await ingestBusinesses(normalizedBusinesses);
 
-	// 7 · recompute stats for affected businesses
-	const statsResult = await recomputeStats(bizResult.affectedIds);
+	// 7 · recompute stats for affected businesses (only when reviews are being ingested).
+	// For directoryofnepal.com there are no reviews in the artifact, so every
+	// recompute would be a no-op that writes the same zeros already set on
+	// insert. Skipping saves 25k+ mutation calls for a full-site run.
+	const statsResult = opts.withStats
+		? await recomputeStats(bizResult.affectedIds)
+		: { ok: 0, failed: 0 };
+	if (!opts.withStats) {
+		console.log(
+			`[ingest] skipping recomputeBusinessStats (${bizResult.affectedIds.length} businesses) — no reviews in artifact. Pass --with-stats to force.`,
+		);
+	}
 
 	// 8 · summary
 	const summary: RunSummary = {
@@ -596,6 +612,18 @@ program
 		"--out <file>",
 		"When combined with --dry, also write the full diff (including " +
 			"field-level old/new values) to this path as JSON.",
+	)
+	.option(
+		"--legacy-category-map",
+		"Use the curated 34-entry categoryMap (bucket everything into 7 slugs). " +
+			"Default (off) uses the source's own 368 category slugs directly — " +
+			"required for full-site ingests.",
+	)
+	.option(
+		"--with-stats",
+		"Call recomputeBusinessStats for every affected business. Default off " +
+			"because the directoryofnepal.com artifact has no reviews, making " +
+			"recompute a 25k-row no-op.",
 	)
 	.action(async (folder: string, opts: CliOptions) => {
 		try {

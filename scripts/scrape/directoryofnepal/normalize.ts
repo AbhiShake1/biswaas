@@ -143,21 +143,56 @@ export function normalizeCategory(
 /* Business                                                                    */
 /* -------------------------------------------------------------------------- */
 
+export type NormalizeBusinessOptions = {
+	/**
+	 * When true (full-site ingest default), use the source's own bare category
+	 * slug (stripped of any `list-of-` prefix) as `primaryCategorySlug` — skips
+	 * the curated `categoryMap` entirely. When false (legacy behaviour, used by
+	 * tests), route unmapped categories to the `UnmappedBusiness` sentinel.
+	 */
+	useSourceCategory?: boolean;
+};
+
+function stripListOfPrefix(slug: string): string {
+	const s = slug.trim().toLowerCase();
+	return s.startsWith("list-of-") ? s.slice("list-of-".length) : s;
+}
+
 /**
  * Normalize a scraped business into the Convex `businesses` insert shape.
  * Returns an `UnmappedBusiness` sentinel when the source category is not in
  * our static map — caller should collect these into `_unmapped.json`.
+ *
+ * Pass `{ useSourceCategory: true }` to bypass the categoryMap and use the
+ * source slug directly (required for full-site ingest where we surface all
+ * 368 source categories).
  */
 export function normalizeBusiness(
 	scraped: ScrapedBusiness,
+	opts: NormalizeBusinessOptions = {},
 ): NormalizedBusiness | UnmappedBusiness {
-	const categoryMatch = mapCategorySlug(scraped.sourceCategorySlug);
-	if (!categoryMatch.isMapped || categoryMatch.slug === UNMAPPED_SLUG) {
-		return {
-			unmapped: true,
-			reason: `No category mapping for source slug '${scraped.sourceCategorySlug}'`,
-			raw: scraped,
-		};
+	let resolvedCategorySlug: string;
+
+	if (opts.useSourceCategory) {
+		const bare = stripListOfPrefix(scraped.sourceCategorySlug);
+		if (!bare) {
+			return {
+				unmapped: true,
+				reason: "Empty source category slug",
+				raw: scraped,
+			};
+		}
+		resolvedCategorySlug = bare;
+	} else {
+		const categoryMatch = mapCategorySlug(scraped.sourceCategorySlug);
+		if (!categoryMatch.isMapped || categoryMatch.slug === UNMAPPED_SLUG) {
+			return {
+				unmapped: true,
+				reason: `No category mapping for source slug '${scraped.sourceCategorySlug}'`,
+				raw: scraped,
+			};
+		}
+		resolvedCategorySlug = categoryMatch.slug;
 	}
 
 	const parsed = parseAddress(scraped.rawAddress ?? "");
@@ -181,7 +216,7 @@ export function normalizeBusiness(
 		municipality: parsed.municipality,
 		address: parsed.address || undefined,
 		coordinates: undefined, // Optional; the scraper may supply lat/lng in a future pass.
-		primaryCategorySlug: categoryMatch.slug,
+		primaryCategorySlug: resolvedCategorySlug,
 		trustScore: computeInitialTrustScore(),
 		starRating: 0,
 		totalReviews: 0,
