@@ -1,11 +1,27 @@
 #!/usr/bin/env -S node
+/**
+ * A3 · directoryofnepal.com scraper CLI.
+ *
+ * Flow:
+ *   1. Fetch /browse-categories → write `categories.json`.
+ *   2. If --category=<slug> passed, filter to just that category.
+ *   3. For each selected category, walk listing pages and collect business
+ *      URLs; write `business-urls.json` (plain string array, A4's input).
+ *
+ * A4 (detail parsing) and A7 (Convex ingest) are out of scope here.
+ */
 import { Command } from "commander";
-import { mkdirSync, existsSync } from "node:fs";
+import { mkdirSync, existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createFetcher, FetcherDisallowedError } from "../shared/fetcher.ts";
-import { createLogger } from "../shared/logger.ts";
-
-const BASE_HOST = "https://www.directoryofnepal.com";
+import {
+	createFetcher,
+	FetcherDisallowedError,
+	type Fetcher,
+} from "../shared/fetcher.ts";
+import { createLogger, type Logger } from "../shared/logger.ts";
+import { discoverCategories } from "./discover.ts";
+import { crawlCategory } from "./parseCategory.ts";
+import type { ScrapedCategory } from "./types.ts";
 
 type CliOptions = {
 	category?: string;
@@ -28,46 +44,202 @@ function resolveRunDir(): string {
 	return runDir;
 }
 
+function writeJson(runDir: string, file: string, payload: unknown): string {
+	const p = join(runDir, file);
+	writeFileSync(p, JSON.stringify(payload, null, 2) + "\n", "utf8");
+	return p;
+}
+
+async function runDiscovery(
+	fetcher: Fetcher,
+	logger: Logger,
+	runDir: string,
+): Promise<ScrapedCategory[]> {
+	logger.info("discovering categories");
+	const categories = await discoverCategories(fetcher);
+	const path = writeJson(runDir, "categories.json", categories);
+	logger.info("categories discovered", { count: categories.length, path });
+	return categories;
+}
+
+/**
+ * Strip the `list-of-` prefix that directoryofnepal's browse-categories index
+ * adds to category slugs. The site's detail URLs use both the bare slug and
+ * the `list-of-` slug interchangeably (HTTP 200 for either). Users (and our
+ * internal category map) think in the bare form, so we normalize when
+ * filtering.
+ */
+function normalizeSlug(raw: string): string {
+	const s = raw.trim().toLowerCase();
+	return s.startsWith("list-of-") ? s.slice("list-of-".length) : s;
+}
+
+function filterCategories(
+	categories: ScrapedCategory[],
+	slug: string | undefined,
+	logger: Logger,
+): ScrapedCategory[] {
+	if (!slug) return categories;
+	const needle = normalizeSlug(slug);
+	const matches = categories.filter((c) => {
+		const bare = normalizeSlug(c.slug);
+		if (bare === needle) return true;
+		// Also accept name-based match (e.g. --category="Education" or
+		// --category="education" matching the display name).
+		const name = c.name.trim().toLowerCase().replace(/\s+/g, "-");
+		return name === needle;
+	});
+	if (matches.length === 0) {
+		logger.warn("no category matched --category flag", {
+			requested: slug,
+			availableSample: categories.slice(0, 10).map((c) => c.slug),
+		});
+	}
+	return matches;
+}
+
+async function crawlSelected(
+	fetcher: Fetcher,
+	logger: Logger,
+	selected: ScrapedCategory[],
+	limit: number | undefined,
+): Promise<string[]> {
+	const all: string[] = [];
+	const seen = new Set<string>();
+
+	for (const cat of selected) {
+		const remaining =
+			limit != null ? Math.max(0, limit - all.length) : undefined;
+		if (limit != null && remaining === 0) break;
+
+		logger.info("crawling category", {
+			slug: cat.slug,
+			sourceId: cat.sourceId,
+			url: cat.url,
+			...(remaining != null ? { limit: remaining } : {}),
+		});
+
+		try {
+			const urls = await crawlCategory(fetcher, cat, remaining, {
+				onError: (url, err) => {
+					logger.error("category page fetch failed", {
+						url,
+						category: cat.slug,
+						error: err instanceof Error ? err.message : String(err),
+					});
+				},
+				onPage: (url, found) => {
+					logger.info("category page parsed", {
+						url,
+						category: cat.slug,
+						businessUrls: found,
+					});
+				},
+			});
+			for (const u of urls) {
+				if (seen.has(u)) continue;
+				seen.add(u);
+				all.push(u);
+				if (limit != null && all.length >= limit) break;
+			}
+		} catch (err) {
+			logger.error("category crawl failed", {
+				slug: cat.slug,
+				url: cat.url,
+				error: err instanceof Error ? err.message : String(err),
+			});
+		}
+
+		if (limit != null && all.length >= limit) break;
+	}
+
+	return all;
+}
+
 async function main(opts: CliOptions): Promise<number> {
 	const runDir = resolveRunDir();
 	const logger = createLogger(runDir);
+	const limit = opts.limit != null ? Number(opts.limit) : undefined;
 
-	logger.info("scaffold only — A2 infrastructure smoke test", {
+	logger.info("run start", {
 		runDir,
 		category: opts.category ?? null,
-		limit: opts.limit ? Number(opts.limit) : null,
+		limit: Number.isFinite(limit) ? limit : null,
 		dry: Boolean(opts.dry),
 		resume: Boolean(opts.resume),
 	});
 
-	const fetcher = createFetcher();
-	const smokeUrl = `${BASE_HOST}/robots.txt`;
+	if (opts.resume) {
+		logger.warn("resume not implemented — continuing as a fresh run");
+	}
 
+	const fetcher = createFetcher();
+
+	// 1 · Category discovery (always runs).
+	let categories: ScrapedCategory[];
 	try {
-		logger.info("smoke fetch: robots.txt", { url: smokeUrl });
-		const body = await fetcher.fetchHtml(smokeUrl);
-		logger.info("smoke fetch ok", {
-			url: smokeUrl,
-			bytes: body.length,
-			preview: body.split("\n").slice(0, 3).join(" | "),
-		});
+		categories = await runDiscovery(fetcher, logger, runDir);
 	} catch (err) {
 		if (err instanceof FetcherDisallowedError) {
-			logger.error("robots disallowed smoke url", { url: smokeUrl });
+			logger.error("category discovery refused by robots.txt", {
+				error: err.message,
+			});
 			return 1;
 		}
-		logger.error("smoke fetch failed", {
-			url: smokeUrl,
+		logger.error("category discovery failed", {
 			error: err instanceof Error ? err.message : String(err),
 		});
 		return 1;
 	}
 
-	logger.info("TODO: A3 category scraper");
+	// 2 · Selection filter.
+	const selected = filterCategories(categories, opts.category, logger);
+	if (selected.length === 0) {
+		logger.warn("no categories selected; writing empty business-urls.json");
+		const p = writeJson(runDir, "business-urls.json", []);
+		logger.info("wrote business-urls.json", { count: 0, path: p });
+		return 0;
+	}
+
+	logger.info("categories selected", {
+		count: selected.length,
+		slugs: selected.slice(0, 10).map((c) => c.slug),
+	});
+
+	// 3 · Listing crawl.
+	const effectiveLimit = Number.isFinite(limit) ? (limit as number) : undefined;
+	let businessUrls: string[] = [];
+	try {
+		businessUrls = await crawlSelected(
+			fetcher,
+			logger,
+			selected,
+			effectiveLimit,
+		);
+	} catch (err) {
+		logger.error("listing crawl failed", {
+			error: err instanceof Error ? err.message : String(err),
+		});
+		// Still write whatever we collected up to this point.
+	}
+
+	const businessUrlsPath = writeJson(runDir, "business-urls.json", businessUrls);
+	logger.info("wrote business-urls.json", {
+		count: businessUrls.length,
+		path: businessUrlsPath,
+	});
+
+	if (opts.dry) {
+		logger.info("dry run — exiting before A4/A7 handoff", {
+			runDir,
+			categories: categories.length,
+			selected: selected.length,
+			businessUrls: businessUrls.length,
+		});
+		return 0;
+	}
+
 	logger.info("TODO: A4 business scraper");
-	logger.info(
-		"scaffold only — no parsers wired. CLI exits 0 until A3/A4 land.",
-	);
 	return 0;
 }
 
@@ -76,12 +248,15 @@ const program = new Command();
 program
 	.name("scrape:don")
 	.description(
-		"directoryofnepal.com scraper (scaffold only — A2 infrastructure)",
+		"directoryofnepal.com scraper — discovers categories and collects business URLs (A3)",
 	)
-	.option("--category <slug>", "Category slug to crawl")
-	.option("--limit <n>", "Max number of items to scrape")
-	.option("--dry", "Dry run — do not write outputs")
-	.option("--resume", "Resume from previous run state")
+	.option("--category <slug>", "Category slug to crawl (e.g. education)")
+	.option("--limit <n>", "Max number of business URLs to collect")
+	.option(
+		"--dry",
+		"Write artifacts but skip downstream handoff (no business scraping)",
+	)
+	.option("--resume", "(not implemented) resume from previous run state")
 	.action(async (opts: CliOptions) => {
 		const code = await main(opts);
 		process.exit(code);
