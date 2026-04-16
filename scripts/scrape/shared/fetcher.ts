@@ -28,6 +28,7 @@ export class FetcherHttpError extends Error {
 export type FetcherOptions = {
 	userAgent?: string;
 	delayMs?: number;
+	concurrency?: number;
 	maxRetries?: number;
 	respectRobots?: boolean;
 	useCache?: boolean;
@@ -58,11 +59,12 @@ export type Fetcher = {
 export function createFetcher(opts: FetcherOptions = {}): Fetcher {
 	const userAgent = opts.userAgent ?? DEFAULT_UA;
 	const delayMs = opts.delayMs ?? DEFAULT_DELAY_MS;
+	const concurrency = opts.concurrency ?? 1;
 	const maxRetries = opts.maxRetries ?? DEFAULT_MAX_RETRIES;
 	const respectRobots = opts.respectRobots ?? true;
 	const useCache = opts.useCache ?? true;
 
-	const queue = new PQueue({ concurrency: 1 });
+	const queue = new PQueue({ concurrency });
 	let lastRequestAt = 0;
 
 	async function rateLimit(): Promise<void> {
