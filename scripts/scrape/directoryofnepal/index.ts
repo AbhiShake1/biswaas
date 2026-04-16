@@ -126,7 +126,7 @@ async function runSitemapDiscovery(
 	const categories: ScrapedCategory[] = result.categories.map((url) => {
 		const m = url.match(/\/category\/(\d+)\/([^/]+)\.html/);
 		const sourceId = m?.[1] ?? "";
-		const slug = (m?.[2] ?? "").replace(/-$/, "");
+		const slug = (m?.[2] ?? "").replace(/^-+|-+$/g, "");
 		const name = slug.split("-").map(capitalize).join(" ");
 		return { sourceId, slug, name, url };
 	});

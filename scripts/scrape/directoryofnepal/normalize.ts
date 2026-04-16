@@ -154,8 +154,14 @@ export type NormalizeBusinessOptions = {
 };
 
 function stripListOfPrefix(slug: string): string {
-	const s = slug.trim().toLowerCase();
-	return s.startsWith("list-of-") ? s.slice("list-of-".length) : s;
+	let s = slug.trim().toLowerCase();
+	if (s.startsWith("list-of-")) s = s.slice("list-of-".length);
+	// Strip leading/trailing dashes (source site has URLs like
+	// `/category/578/-auto-parts-sale-store.html` and the breadcrumb parser
+	// occasionally emits slugs with leading whitespace-as-dash from edge
+	// cases like `, Electronics & Electricals` → `-electronics-electricals`).
+	s = s.replace(/^-+|-+$/g, "");
+	return s;
 }
 
 /**

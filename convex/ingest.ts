@@ -33,6 +33,8 @@ import { calculateTrustScore } from "./lib/trustScore";
  * date. The ordering matches the input ordering for inserted/updated rows.
  */
 export type UpsertBusinessesResult = UpsertResult & {
+  /** Count of rows where `primaryCategorySlug` didn't match any category. */
+  skipped: number;
   affectedBusinessIds: Id<"businesses">[];
 };
 
@@ -124,6 +126,7 @@ async function writeAuditLog(
     userId: Id<"users">;
     result: UpsertResult;
     total: number;
+    extra?: Record<string, unknown>;
   }
 ) {
   await ctx.db.insert("auditLogs", {
@@ -136,6 +139,7 @@ async function writeAuditLog(
       updated: params.result.updated,
       unchanged: params.result.unchanged,
       total: params.total,
+      ...(params.extra ?? {}),
     }),
     createdAt: Date.now(),
   });
@@ -268,7 +272,9 @@ export const upsertBusinesses = internalMutation({
     // handful of categories across hundreds of businesses.
     const categoryIdBySlug = new Map<string, Id<"categories">>();
 
-    async function resolveCategoryId(slug: string): Promise<Id<"categories">> {
+    async function resolveCategoryId(
+      slug: string,
+    ): Promise<Id<"categories"> | null> {
       const cached = categoryIdBySlug.get(slug);
       if (cached) return cached;
 
@@ -278,16 +284,26 @@ export const upsertBusinesses = internalMutation({
         .unique();
 
       if (!category) {
-        throw new ConvexError(`Unknown category slug: ${slug}`);
+        // Returning null instead of throwing lets full-site ingests tolerate
+        // businesses whose breadcrumb category isn't in the sitemap (orphan
+        // slugs on the source site). Caller counts these as skipped.
+        return null;
       }
       categoryIdBySlug.set(slug, category._id);
       return category._id;
     }
 
     const emptyDistribution = { one: 0, two: 0, three: 0, four: 0, five: 0 };
+    let skipped = 0;
 
     for (const input of args.businesses) {
-      const primaryCategoryId = await resolveCategoryId(input.primaryCategorySlug);
+      const primaryCategoryId = await resolveCategoryId(
+        input.primaryCategorySlug,
+      );
+      if (primaryCategoryId == null) {
+        skipped += 1;
+        continue;
+      }
 
       const existing = await ctx.db
         .query("businesses")
@@ -415,9 +431,10 @@ export const upsertBusinesses = internalMutation({
       userId: systemUserId,
       result,
       total: args.businesses.length,
+      extra: { skipped },
     });
 
-    return { ...result, affectedBusinessIds };
+    return { ...result, skipped, affectedBusinessIds };
   },
 });
 
