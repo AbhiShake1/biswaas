@@ -17,6 +17,7 @@ import {
 	validatePhone,
 	validateUrl,
 } from "./normalize.ts";
+import { mapCategorySlug } from "./categoryMap.ts";
 import { parseAddress } from "./geoMap.ts";
 import type { ScrapedBusiness, ScrapedCategory } from "./types.ts";
 
@@ -190,4 +191,29 @@ test("case 6: helpers behave", () => {
 	assert.equal(validateUrl(undefined), undefined);
 	assert.equal(validateUrl("not a url"), undefined);
 	assert.equal(validateUrl("https://example.com"), "https://example.com/");
+});
+
+/* -------------------------------------------------------------------------- */
+/* Case 7: categoryMap strips `list-of-` prefix from source slugs             */
+/* -------------------------------------------------------------------------- */
+test("case 7: mapCategorySlug strips `list-of-` prefix before lookup", () => {
+	// `list-of-education` and bare `education` must both resolve to the same
+	// internal slug — the browse-categories index advertises the prefixed
+	// form but the DIRECT_MAP keys are bare.
+	const prefixed = mapCategorySlug("list-of-education");
+	assert.equal(prefixed.isMapped, true);
+	assert.equal(prefixed.slug, "education-consultancies");
+
+	const bare = mapCategorySlug("education");
+	assert.equal(bare.isMapped, true);
+	assert.equal(bare.slug, "education-consultancies");
+
+	// Case-insensitive, whitespace-tolerant.
+	const messy = mapCategorySlug("  LIST-OF-HOTELS  ");
+	assert.equal(messy.isMapped, true);
+	assert.equal(messy.slug, "hotels-resorts");
+
+	// Prefix but unknown tail → unmapped.
+	const unknown = mapCategorySlug("list-of-taxidermy-services");
+	assert.equal(unknown.isMapped, false);
 });

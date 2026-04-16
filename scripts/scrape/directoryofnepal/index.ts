@@ -21,7 +21,14 @@ import {
 import { createLogger, type Logger } from "../shared/logger.ts";
 import { discoverCategories } from "./discover.ts";
 import { crawlCategory } from "./parseCategory.ts";
-import type { ScrapedCategory } from "./types.ts";
+import { scrapeBusiness } from "./parseBusiness.ts";
+import type { ScrapedBusiness, ScrapedCategory } from "./types.ts";
+
+type ScrapeFailure = {
+	url: string;
+	error: string;
+	timestamp: string;
+};
 
 type CliOptions = {
 	category?: string;
@@ -229,17 +236,54 @@ async function main(opts: CliOptions): Promise<number> {
 		path: businessUrlsPath,
 	});
 
-	if (opts.dry) {
-		logger.info("dry run — exiting before A4/A7 handoff", {
-			runDir,
-			categories: categories.length,
-			selected: selected.length,
-			businessUrls: businessUrls.length,
-		});
-		return 0;
+	// 4 · A4 — business detail scraping. Runs even in --dry mode because the
+	// artifact (businesses.json) is what A7 ingests; the --dry flag only
+	// skips a downstream ingest handoff (not implemented here yet).
+	const businesses: ScrapedBusiness[] = [];
+	const failures: ScrapeFailure[] = [];
+
+	for (const url of businessUrls) {
+		try {
+			const biz = await scrapeBusiness(fetcher, url);
+			businesses.push(biz);
+			logger.info("business scraped", {
+				url,
+				sourceId: biz.sourceId,
+				name: biz.name,
+			});
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			failures.push({
+				url,
+				error: message,
+				timestamp: new Date().toISOString(),
+			});
+			logger.error("business scrape failed", { url, error: message });
+		}
 	}
 
-	logger.info("TODO: A4 business scraper");
+	const businessesPath = writeJson(runDir, "businesses.json", businesses);
+	const failuresPath = writeJson(runDir, "failures.json", failures);
+	logger.info("wrote businesses.json", {
+		count: businesses.length,
+		path: businessesPath,
+	});
+	logger.info("wrote failures.json", {
+		count: failures.length,
+		path: failuresPath,
+	});
+
+	const summary = {
+		categories: selected.length,
+		businessesScraped: businesses.length,
+		failures: failures.length,
+	};
+	logger.info("run summary", summary);
+	console.log("[scrape:don] summary:", JSON.stringify(summary));
+
+	if (opts.dry) {
+		logger.info("dry run — skipping ingest handoff", { runDir, ...summary });
+	}
 	return 0;
 }
 

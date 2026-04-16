@@ -77,6 +77,15 @@ export type CategoryMapResult = {
 };
 
 /**
+ * Strip the `list-of-` prefix that directoryofnepal's browse-categories index
+ * prepends to category slugs (e.g. `list-of-education` → `education`). The
+ * lookup table above is keyed on the bare form, so we preprocess the input.
+ */
+function stripListOfPrefix(s: string): string {
+	return s.startsWith("list-of-") ? s.slice("list-of-".length) : s;
+}
+
+/**
  * Map a directoryofnepal.com category slug to a Biswaas internal slug.
  *
  * @returns an object with the resolved slug (or `UNMAPPED_SLUG`) and a
@@ -84,7 +93,7 @@ export type CategoryMapResult = {
  */
 export function mapCategorySlug(sourceSlug: string): CategoryMapResult {
 	if (!sourceSlug) return { slug: UNMAPPED_SLUG, isMapped: false };
-	const key = sourceSlug.trim().toLowerCase();
+	const key = stripListOfPrefix(sourceSlug.trim().toLowerCase());
 	const direct = DIRECT_MAP[key];
 	if (direct) return { slug: direct, isMapped: true };
 	return { slug: UNMAPPED_SLUG, isMapped: false };
