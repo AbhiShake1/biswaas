@@ -11,7 +11,9 @@
 import type * as businesses from "../businesses.js";
 import type * as categories from "../categories.js";
 import type * as http from "../http.js";
+import type * as ingest from "../ingest.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_importers from "../lib/importers.js";
 import type * as lib_time from "../lib/time.js";
 import type * as lib_trustScore from "../lib/trustScore.js";
 import type * as reviews from "../reviews.js";
@@ -27,7 +29,9 @@ declare const fullApi: ApiFromModules<{
   businesses: typeof businesses;
   categories: typeof categories;
   http: typeof http;
+  ingest: typeof ingest;
   "lib/auth": typeof lib_auth;
+  "lib/importers": typeof lib_importers;
   "lib/time": typeof lib_time;
   "lib/trustScore": typeof lib_trustScore;
   reviews: typeof reviews;
