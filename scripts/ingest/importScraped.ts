@@ -1,6 +1,7 @@
 #!/usr/bin/env -S node
 /**
  * A8 · Ingest CLI for scraped directoryofnepal.com artifacts.
+ * A9 · Adds `--dry` mode (per-slug diff, no writes) and `--out <file>`.
  *
  * Pipeline:
  *   1. Validate the dated artifact folder contains `categories.json` and
@@ -12,12 +13,17 @@
  *      scraper and ingest agree on every transform.
  *   4. Segregate `UnmappedBusiness[]` into `_unmapped.json` inside the run
  *      folder and log the count — only mapped businesses reach Convex.
- *   5. Chunk categories (100) + businesses (100) and call the internal
- *      Convex mutations `internal.ingest.upsertCategories` /
- *      `internal.ingest.upsertBusinesses`. Individual chunk failures are
- *      logged and counted; the rest of the run continues.
+ *   5a. [--dry] Call `scripts/ingest/diffReport.computeDiff` to compare the
+ *       normalized artifact against live Convex state. Prints a per-entity
+ *       new/changed/unchanged table + up to 10 example "changed" field
+ *       names. Optionally writes the full diff (with field old/new values)
+ *       to `--out <file>`. No mutations are called. Exit 0.
+ *   5b. [real] Chunk categories (100) + businesses (100) and call the
+ *       internal Convex mutations `internal.ingest.upsertCategories` /
+ *       `internal.ingest.upsertBusinesses`. Individual chunk failures are
+ *       logged and counted; the rest of the run continues.
  *   6. Call `internal.ingest.recomputeBusinessStats` for every
- *      inserted/updated business ID.
+ *      inserted/updated business ID (real mode only).
  *   7. Print a terminal summary: counts of inserted/updated/unchanged/
  *      unmapped/failed + statsRecomputed.
  *
@@ -49,6 +55,7 @@ import {
 	type ScrapedCategory,
 	type UnmappedBusiness,
 } from "../scrape/directoryofnepal/types.ts";
+import { computeDiff, type DiffResult } from "./diffReport.ts";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -56,6 +63,7 @@ import {
 
 type CliOptions = {
 	dry?: boolean;
+	out?: string;
 };
 
 type UpsertResult = {
@@ -368,13 +376,6 @@ async function recomputeStats(
 /* -------------------------------------------------------------------------- */
 
 async function main(folder: string, opts: CliOptions): Promise<number> {
-	if (opts.dry) {
-		console.log(
-			"[ingest] --dry is stubbed: not implemented in A8, will land in A9.",
-		);
-		return 0;
-	}
-
 	// 1 · validate folder
 	const abs = resolve(folder);
 	if (!existsSync(abs)) {
@@ -444,14 +445,43 @@ async function main(folder: string, opts: CliOptions): Promise<number> {
 		);
 	}
 
-	// 5 · ingest
+	// 5 · dry-run diff short-circuit — NEVER calls a mutation.
+	if (opts.dry) {
+		const diff = await computeDiff({
+			categories: normalizedCategories,
+			businesses: normalizedBusinesses,
+		});
+		printDryRunSummary(diff, unmapped.length);
+
+		if (opts.out) {
+			const outPath = resolve(opts.out);
+			try {
+				if (!existsSync(dirname(outPath)))
+					mkdirSync(dirname(outPath), { recursive: true });
+				writeFileSync(outPath, JSON.stringify(diff, null, 2) + "\n", "utf8");
+				console.log(`[ingest] wrote full diff to ${outPath}`);
+			} catch (err) {
+				console.error(
+					`[ingest] failed to write ${outPath}:`,
+					err instanceof Error ? err.message : err,
+				);
+			}
+		}
+
+		console.log(
+			"[ingest] dry run complete — 0 mutations called, 0 rows written.",
+		);
+		return 0;
+	}
+
+	// 6 · ingest
 	const catResult = await ingestCategories(normalizedCategories);
 	const bizResult = await ingestBusinesses(normalizedBusinesses);
 
-	// 6 · recompute stats for affected businesses
+	// 7 · recompute stats for affected businesses
 	const statsResult = await recomputeStats(bizResult.affectedIds);
 
-	// 7 · summary
+	// 8 · summary
 	const summary: RunSummary = {
 		categories: catResult.result,
 		businesses: {
@@ -466,6 +496,89 @@ async function main(folder: string, opts: CliOptions): Promise<number> {
 	return 0;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Dry-run printer                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tabular-ish summary for `--dry`. Keeps output tight: three counter lines
+ * per entity + up to 10 example "changed" rows showing the differing field
+ * names (never values — large description diffs would drown the terminal).
+ */
+function printDryRunSummary(diff: DiffResult, unmappedCount: number): void {
+	const pad = (label: string, width = 10) => label.padEnd(width, " ");
+
+	console.log("");
+	console.log("[ingest] dry-run diff (no writes)");
+	console.log(
+		"  entity      " +
+			pad("new", 8) +
+			pad("changed", 10) +
+			pad("unchanged", 12),
+	);
+	console.log(
+		"  categories  " +
+			pad(String(diff.categories.new.length), 8) +
+			pad(String(diff.categories.changed.length), 10) +
+			pad(String(diff.categories.unchanged.length), 12),
+	);
+	console.log(
+		"  businesses  " +
+			pad(String(diff.businesses.new.length), 8) +
+			pad(String(diff.businesses.changed.length), 10) +
+			pad(String(diff.businesses.unchanged.length), 12),
+	);
+	console.log(`  unmapped businesses: ${unmappedCount}`);
+
+	const sampleSize = 10;
+
+	if (diff.categories.changed.length > 0) {
+		console.log("");
+		console.log(
+			`  categories — changed (showing ${Math.min(sampleSize, diff.categories.changed.length)}/${diff.categories.changed.length}):`,
+		);
+		for (const row of diff.categories.changed.slice(0, sampleSize)) {
+			const fieldNames = Object.keys(row.fields).sort().join(", ");
+			console.log(`    - ${row.slug} · fields: [${fieldNames}]`);
+		}
+	}
+
+	if (diff.businesses.changed.length > 0) {
+		console.log("");
+		console.log(
+			`  businesses — changed (showing ${Math.min(sampleSize, diff.businesses.changed.length)}/${diff.businesses.changed.length}):`,
+		);
+		for (const row of diff.businesses.changed.slice(0, sampleSize)) {
+			const fieldNames = Object.keys(row.fields).sort().join(", ");
+			console.log(`    - ${row.slug} · fields: [${fieldNames}]`);
+		}
+	}
+
+	if (diff.categories.new.length > 0) {
+		const names = diff.categories.new
+			.slice(0, sampleSize)
+			.map((c) => c.slug)
+			.join(", ");
+		const more =
+			diff.categories.new.length > sampleSize
+				? `, +${diff.categories.new.length - sampleSize} more`
+				: "";
+		console.log("");
+		console.log(`  categories — new: ${names}${more}`);
+	}
+	if (diff.businesses.new.length > 0) {
+		const names = diff.businesses.new
+			.slice(0, sampleSize)
+			.map((b) => b.slug)
+			.join(", ");
+		const more =
+			diff.businesses.new.length > sampleSize
+				? `, +${diff.businesses.new.length - sampleSize} more`
+				: "";
+		console.log(`  businesses — new: ${names}${more}`);
+	}
+}
+
 const program = new Command();
 
 program
@@ -476,7 +589,13 @@ program
 	.argument("<folder>", "Path to a dated scrape artifact folder")
 	.option(
 		"--dry",
-		"Stubbed in A8 — dry diff is deferred to A9. Prints a notice and exits.",
+		"Compute the per-slug diff against live Convex state and print a summary. " +
+			"No mutations are ever called in this mode.",
+	)
+	.option(
+		"--out <file>",
+		"When combined with --dry, also write the full diff (including " +
+			"field-level old/new values) to this path as JSON.",
 	)
 	.action(async (folder: string, opts: CliOptions) => {
 		try {

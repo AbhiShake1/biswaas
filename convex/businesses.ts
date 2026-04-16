@@ -20,6 +20,23 @@ async function withCategory(ctx: any, business: any) {
   };
 }
 
+/**
+ * Read-only, full-table listing of businesses. Intended for ingest tooling
+ * (A9 dry-run diff) so it can compare every row by slug without pulling a
+ * per-category or per-status slice. Returns the raw documents — no logo URL
+ * resolution, no category joining, no trust-score sort — because the diff
+ * only cares about stored fields.
+ *
+ * Public, no-auth; safe to expose because the individual fields are already
+ * public via `getBySlug`/`listByCategory`/`search`.
+ */
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("businesses").collect();
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {

@@ -11,6 +11,21 @@ export const list = query({
   },
 });
 
+/**
+ * Read-only, full-table listing. Unlike `list`, this includes inactive
+ * categories so ingest tooling (A9 dry-run diff) can compare every row —
+ * otherwise an inactive-but-present row would be misreported as "new".
+ *
+ * Public, no-auth; safe to expose because category metadata is already
+ * public via `list`/`getBySlug`.
+ */
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("categories").collect();
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
