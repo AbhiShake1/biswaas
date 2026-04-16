@@ -28,3 +28,8 @@ evidence/*.mp4
 
 # Claude
 .claude/
+
+# Scraping artifacts
+data/scraped/**/raw/
+data/scraped/.cache/
+data/scraped/**/run.log
