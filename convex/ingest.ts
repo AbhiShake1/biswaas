@@ -23,6 +23,19 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { getOrCreateSystemUserInternal, type UpsertResult } from "./lib/importers";
 import { calculateTrustScore } from "./lib/trustScore";
 
+/**
+ * `upsertBusinesses` returns this extended shape: the base `UpsertResult`
+ * counters plus the Convex IDs of every business row that was inserted or
+ * updated during the batch. A8's ingest CLI uses `affectedBusinessIds` to
+ * fan out `recomputeBusinessStats` calls after businesses land.
+ *
+ * `unchanged` rows are NOT included — their derived stats are already up to
+ * date. The ordering matches the input ordering for inserted/updated rows.
+ */
+export type UpsertBusinessesResult = UpsertResult & {
+  affectedBusinessIds: Id<"businesses">[];
+};
+
 /* -------------------------------------------------------------------------- */
 /* Validators — mirror `NormalizedCategory` / `NormalizedBusiness` from       */
 /* `scripts/scrape/directoryofnepal/types.ts`.                                */
@@ -247,8 +260,9 @@ export const upsertBusinesses = internalMutation({
   args: {
     businesses: v.array(normalizedBusinessValidator),
   },
-  handler: async (ctx, args): Promise<UpsertResult> => {
+  handler: async (ctx, args): Promise<UpsertBusinessesResult> => {
     const result: UpsertResult = { inserted: 0, updated: 0, unchanged: 0 };
+    const affectedBusinessIds: Id<"businesses">[] = [];
 
     // Cache category slug -> Id lookups; a typical ingest batch shares a
     // handful of categories across hundreds of businesses.
@@ -281,7 +295,7 @@ export const upsertBusinesses = internalMutation({
         .unique();
 
       if (!existing) {
-        await ctx.db.insert("businesses", {
+        const insertedId = await ctx.db.insert("businesses", {
           name: input.name,
           nameNe: input.nameNe,
           slug: input.slug,
@@ -314,6 +328,7 @@ export const upsertBusinesses = internalMutation({
           updatedAt: input.updatedAt || Date.now(),
         });
         result.inserted += 1;
+        affectedBusinessIds.push(insertedId);
         continue;
       }
 
@@ -390,6 +405,7 @@ export const upsertBusinesses = internalMutation({
         patch.updatedAt = Date.now();
         await ctx.db.patch(existing._id, patch);
         result.updated += 1;
+        affectedBusinessIds.push(existing._id);
       }
     }
 
@@ -401,7 +417,7 @@ export const upsertBusinesses = internalMutation({
       total: args.businesses.length,
     });
 
-    return result;
+    return { ...result, affectedBusinessIds };
   },
 });
 
