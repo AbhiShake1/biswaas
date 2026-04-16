@@ -11,6 +11,21 @@ export const list = query({
   },
 });
 
+/**
+ * Read-only, full-table listing. Unlike `list`, this includes inactive
+ * categories so ingest tooling (A9 dry-run diff) can compare every row —
+ * otherwise an inactive-but-present row would be misreported as "new".
+ *
+ * Public, no-auth; safe to expose because category metadata is already
+ * public via `list`/`getBySlug`.
+ */
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("categories").collect();
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
@@ -26,13 +41,14 @@ export const getBySlug = query({
       .withIndex("by_parentId", (q) => q.eq("parentId", category._id))
       .collect();
 
-    // Get businesses in this category
+    // Get businesses in this category — bounded take() keeps us under
+    // Convex's per-transaction read cap at 26k+ total businesses scale.
     const businesses = await ctx.db
       .query("businesses")
       .withIndex("by_primaryCategoryId_status", (q) =>
         q.eq("primaryCategoryId", category._id).eq("status", "active")
       )
-      .collect();
+      .take(500);
 
     // Get logo URLs for businesses
     const businessesWithLogos = await Promise.all(

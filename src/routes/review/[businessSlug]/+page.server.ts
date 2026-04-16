@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
 	reply: async ({ request, locals }) => {
-		if (!locals.user) {
+		if (!locals.user || !locals.accessToken) {
 			return fail(401, { replyError: 'Sign in to reply to reviews.' });
 		}
 
@@ -28,6 +28,7 @@ export const actions: Actions = {
 		await createReply({
 			reviewId,
 			body,
+			accessToken: locals.accessToken,
 			user: locals.user
 		});
 

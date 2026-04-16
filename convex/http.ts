@@ -118,43 +118,4 @@ http.route({
   }),
 });
 
-http.route({
-  path: "/api/v1/reviews",
-  method: "POST",
-  handler: httpAction(async (ctx, request) => {
-    const body = await request.json();
-    const reviewId = await ctx.runMutation(api.reviews.createFromSession, {
-      businessSlug: body.businessSlug,
-      stars: body.stars,
-      title: body.title,
-      body: body.body,
-      user: body.user,
-      language: body.language,
-    });
-
-    return jsonResponse({ reviewId }, 201);
-  }),
-});
-
-http.route({
-  path: "/api/v1/reviews/reply",
-  method: "OPTIONS",
-  handler: httpAction(async () => new Response(null, { status: 204, headers: corsHeaders() })),
-});
-
-http.route({
-  path: "/api/v1/reviews/reply",
-  method: "POST",
-  handler: httpAction(async (ctx, request) => {
-    const body = await request.json();
-    const reviewId = await ctx.runMutation(api.reviews.replyFromSession, {
-      reviewId: body.reviewId,
-      body: body.body,
-      user: body.user,
-    });
-
-    return jsonResponse({ reviewId }, 201);
-  }),
-});
-
 export default http;

@@ -4,6 +4,7 @@ declare global {
 	namespace App {
 		interface Locals {
 			user: AuthUser | null;
+			accessToken: string | null;
 		}
 	}
 }

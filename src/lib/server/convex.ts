@@ -1,5 +1,9 @@
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
 import type {
 	BusinessRecord,
 	BusinessSummary,
@@ -208,33 +212,37 @@ export async function createReview(input: {
 	stars: number;
 	title: string;
 	body: string;
+	accessToken: string;
 	user: AuthUser;
+	language?: 'en' | 'ne';
 }) {
-	const user = {
-		id: input.user.id,
-		email: input.user.email,
-		name: input.user.name
-	};
-
-	return request<{ reviewId: string }>(`/api/v1/reviews`, {
-		method: 'POST',
-		body: JSON.stringify({ ...input, user })
+	const convexUrl = publicEnv.PUBLIC_CONVEX_URL?.trim().replace(/\/$/, '');
+	if (!convexUrl) throw error(500, 'PUBLIC_CONVEX_URL is not configured.');
+	const client = new ConvexHttpClient(convexUrl);
+	client.setAuth(input.accessToken);
+	return client.mutation(api.reviews.createFromSession, {
+		businessSlug: input.businessSlug,
+		stars: input.stars as 1 | 2 | 3 | 4 | 5,
+		title: input.title,
+		body: input.body,
+		user: { id: input.user.id, email: input.user.email, name: input.user.name },
+		language: input.language
 	});
 }
 
 export async function createReply(input: {
 	reviewId: string;
 	body: string;
+	accessToken: string;
 	user: AuthUser;
 }) {
-	const user = {
-		id: input.user.id,
-		email: input.user.email,
-		name: input.user.name
-	};
-
-	return request<{ reviewId: string }>(`/api/v1/reviews/reply`, {
-		method: 'POST',
-		body: JSON.stringify({ ...input, user })
+	const convexUrl = publicEnv.PUBLIC_CONVEX_URL?.trim().replace(/\/$/, '');
+	if (!convexUrl) throw error(500, 'PUBLIC_CONVEX_URL is not configured.');
+	const client = new ConvexHttpClient(convexUrl);
+	client.setAuth(input.accessToken);
+	return client.mutation(api.reviews.replyFromSession, {
+		reviewId: input.reviewId as Id<'reviews'>,
+		body: input.body,
+		user: { id: input.user.id, email: input.user.email, name: input.user.name }
 	});
 }

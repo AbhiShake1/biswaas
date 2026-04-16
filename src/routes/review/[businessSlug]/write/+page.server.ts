@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
 	default: async ({ request, locals, params }) => {
-		if (!locals.user) {
+		if (!locals.user || !locals.accessToken) {
 			return fail(401, { error: 'Sign in to write a review.' });
 		}
 
@@ -33,6 +33,7 @@ export const actions: Actions = {
 			stars,
 			title,
 			body,
+			accessToken: locals.accessToken,
 			user: locals.user
 		});
 

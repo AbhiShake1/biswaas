@@ -7,6 +7,8 @@ compatibility_flags = ["nodejs_compat"]
 CONVEX_URL = "https://outgoing-warbler-836.convex.site"
 PUBLIC_CONVEX_URL = "https://outgoing-warbler-836.convex.cloud"
 PUBLIC_CONVEX_SITE_URL = "https://outgoing-warbler-836.convex.site"
+WORKOS_CLIENT_ID = "client_01KKYG4JJK79BPD8C3QHRPKVS9"
+WORKOS_REDIRECT_URI = "https://biswaas.abhi-shake-np.workers.dev/auth/callback"
 
 [assets]
 directory = ".svelte-kit/cloudflare"
