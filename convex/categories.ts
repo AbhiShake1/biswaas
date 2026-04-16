@@ -41,13 +41,14 @@ export const getBySlug = query({
       .withIndex("by_parentId", (q) => q.eq("parentId", category._id))
       .collect();
 
-    // Get businesses in this category
+    // Get businesses in this category — bounded take() keeps us under
+    // Convex's per-transaction read cap at 26k+ total businesses scale.
     const businesses = await ctx.db
       .query("businesses")
       .withIndex("by_primaryCategoryId_status", (q) =>
         q.eq("primaryCategoryId", category._id).eq("status", "active")
       )
-      .collect();
+      .take(500);
 
     // Get logo URLs for businesses
     const businessesWithLogos = await Promise.all(
