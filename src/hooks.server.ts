@@ -9,6 +9,7 @@ import {
 
 export const handle: Handle = async ({ event, resolve }) => {
   event.locals.user = null;
+  event.locals.accessToken = null;
 
   const sessionCookie = event.cookies.get(COOKIE_NAME);
   if (!sessionCookie) return resolve(event);
@@ -21,6 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     if (result.authenticated) {
       event.locals.user = toAuthUser(result.user);
+      event.locals.accessToken = (result as { accessToken?: string }).accessToken ?? null;
       if ('sealedSession' in result && result.sealedSession) {
         event.cookies.set(
           COOKIE_NAME,
@@ -47,6 +49,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         });
         if (fresh.authenticated) {
           event.locals.user = toAuthUser(fresh.user);
+          event.locals.accessToken = (fresh as { accessToken?: string }).accessToken ?? null;
         }
       } else {
         event.cookies.delete(COOKIE_NAME, { path: '/' });

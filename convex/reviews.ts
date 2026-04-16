@@ -1,47 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { requireUser } from "./lib/auth";
+import { getOrCreateAuthUser } from "./lib/auth";
 import { calculateTrustScore } from "./lib/trustScore";
 import { now } from "./lib/time";
-
-async function getOrCreateSessionUser(
-  ctx: any,
-  user: { id: string; email: string; name: string }
-) {
-  const existingByWorkosId = await ctx.db
-    .query("users")
-    .withIndex("by_workosId", (q: any) => q.eq("workosId", user.id))
-    .unique();
-  if (existingByWorkosId) return existingByWorkosId;
-
-  const existingByEmail = await ctx.db
-    .query("users")
-    .withIndex("by_email", (q: any) => q.eq("email", user.email))
-    .unique();
-  if (existingByEmail) {
-    await ctx.db.patch(existingByEmail._id, {
-      workosId: user.id,
-      name: user.name,
-      updatedAt: now(),
-    });
-    return { ...existingByEmail, workosId: user.id, name: user.name };
-  }
-
-  const userId = await ctx.db.insert("users", {
-    workosId: user.id,
-    email: user.email,
-    name: user.name,
-    avatarUrl: undefined,
-    role: "consumer",
-    reviewCount: 0,
-    isVerified: false,
-    language: "en",
-    createdAt: now(),
-    updatedAt: now(),
-  });
-
-  return await ctx.db.get(userId);
-}
 
 export const listByBusiness = query({
   args: {
@@ -129,71 +90,6 @@ export const listByBusiness = query({
   },
 });
 
-export const create = mutation({
-  args: {
-    businessId: v.id("businesses"),
-    stars: v.union(
-      v.literal(1),
-      v.literal(2),
-      v.literal(3),
-      v.literal(4),
-      v.literal(5)
-    ),
-    title: v.string(),
-    body: v.string(),
-    language: v.optional(v.union(v.literal("en"), v.literal("ne"))),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
-
-    const reviewId = await ctx.db.insert("reviews", {
-      businessId: args.businessId,
-      authorId: user._id,
-      stars: args.stars,
-      title: args.title,
-      body: args.body,
-      language: args.language ?? "en",
-      source: "organic",
-      isVerified: false,
-      helpfulCount: 0,
-      reportCount: 0,
-      moderationStatus: "visible",
-      createdAt: now(),
-      updatedAt: now(),
-    });
-
-    // Recalculate trust score
-    const allReviews = await ctx.db
-      .query("reviews")
-      .withIndex("by_businessId_createdAt", (q) =>
-        q.eq("businessId", args.businessId)
-      )
-      .collect();
-
-    const visibleReviews = allReviews.filter(
-      (r) => r.moderationStatus === "visible"
-    );
-    const { trustScore, starRating, ratingDistribution } =
-      calculateTrustScore(visibleReviews);
-
-    await ctx.db.patch(args.businessId, {
-      trustScore,
-      starRating,
-      totalReviews: visibleReviews.length,
-      ratingDistribution,
-      updatedAt: now(),
-    });
-
-    // Update user review count
-    await ctx.db.patch(user._id, {
-      reviewCount: user.reviewCount + 1,
-      updatedAt: now(),
-    });
-
-    return reviewId;
-  },
-});
-
 export const createFromSession = mutation({
   args: {
     businessSlug: v.string(),
@@ -223,11 +119,14 @@ export const createFromSession = mutation({
       throw new Error("Business not found");
     }
 
-    const user = await getOrCreateSessionUser(ctx, args.user);
+    const user = await getOrCreateAuthUser(ctx, {
+      email: args.user.email,
+      name: args.user.name,
+    });
 
     const reviewId = await ctx.db.insert("reviews", {
       businessId: business._id,
-      authorId: user!._id,
+      authorId: user._id,
       stars: args.stars,
       title: args.title,
       body: args.body,
@@ -257,8 +156,8 @@ export const createFromSession = mutation({
       updatedAt: now(),
     });
 
-    await ctx.db.patch(user!._id, {
-      reviewCount: user!.reviewCount + 1,
+    await ctx.db.patch(user._id, {
+      reviewCount: user.reviewCount + 1,
       updatedAt: now(),
     });
 
@@ -282,12 +181,15 @@ export const replyFromSession = mutation({
       throw new Error("Review not found");
     }
 
-    const user = await getOrCreateSessionUser(ctx, args.user);
+    const user = await getOrCreateAuthUser(ctx, {
+      email: args.user.email,
+      name: args.user.name,
+    });
 
     await ctx.db.patch(review._id, {
       replyText: args.body,
       replyAt: now(),
-      repliedByUserId: user!._id,
+      repliedByUserId: user._id,
       updatedAt: now(),
     });
 
